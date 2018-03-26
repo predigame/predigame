@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = 'predigame',
-    version = '1.2.1',
+    version = '1.2.0',
     description = 'An instructional game development platform',
     url = 'http://predigame.io',
     author = 'Predicate Academy',
@@ -12,10 +12,7 @@ setup(
     include_package_data = True,
     entry_points = {
         'console_scripts': [
-            'pred = predigame:main',
-            'predpull = predigame:pull',
-            'predcreate = predigame:create',
-            'predlist = predigame:list'
+            'pred = predigame:bootstrap'
         ]
     }
 )
