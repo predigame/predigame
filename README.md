@@ -1,4 +1,4 @@
-#Predigame Instructional Platform
+# Predigame Instructional Platform
 ![Screenshot](http://predigame.io/img/porter_270_alive.gif)
 
 *Pure Code. Pure Fun. Brain candy for the aspiring coder!*
