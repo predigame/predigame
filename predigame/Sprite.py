@@ -1,17 +1,17 @@
 import sys, random, math, pygame
 from functools import partial
-from .utils import register_keydown, register_keyup, animate, randrange_float, sign
+from .utils import register_keydown, register_keyup, animate, randrange_float, sign, to_grid, to_area, at
 from .Globals import Globals
 
 class Sprite():
     """
 
     The Predigame Sprite - a generic two-dimensional object that is integrated with other sprites in a larger scene. A sprite
-    can consist of a bitmap (still) image or a basic geometrical shape (circle, rectangle, ellipse). Sprites in PrediGame
+    can consist of a bitmap (still) image or a basic geometrical shape (circle, rectangle, ellipse). Sprites in Predigame
     have some fun properties - they can be clicked, collide with other sprites, even fade, spin or pulse.
 
     """
-    def __init__(self, surface, rect, tag=None, abortable=False, name=None):
+    def __init__(self, surface, rect, tag=None, abortable=True, name=None):
         if len(Globals.instance.sprites) >= 9000:
             sys.exit('Too many sprites! You\'re trying to spawn over 9,000!')
         self.surface = surface.convert_alpha()
@@ -36,7 +36,8 @@ class Sprite():
         self.name = name
         self._tag = tag
         self.abortable = abortable
-
+        self.mass = 0
+        self.falling = False
 
         if tag not in Globals.instance.tags.keys():
             Globals.instance.tags[tag] = [self]
@@ -199,6 +200,8 @@ class Sprite():
             self.rotate(0)
             self.needs_rotation = False
         self._handle_collisions()
+        if self.mass > 0:
+            self._update_gravity()
 
     def _draw(self, surface):
         surface.blit(self.surface, self.rect)
@@ -361,6 +364,32 @@ class Sprite():
 
         callback()
         return self
+
+    def _update_gravity(self):
+       # update acceleration (add to animation -- longer it runs.. the faster you fall)
+       # check for angular rolling?
+       # add bouncingness on the fall (should be based on the type of landing surface)
+       # fix actor keys to respect laws of gravity (respect objects, can't go up)
+
+       cover_area = to_area(to_grid(self.virt_rect))
+       next_area = list(map(lambda p : (p[0], p[1]+1), cover_area))
+       clear = True
+       for p in next_area:
+          if p in Globals.instance.cells and self not in Globals.instance.cells[p]:
+              clear = False
+              if self.falling:
+                 self.falling = False
+                 for ani in Globals.instance.animations:
+                    if ani.obj == self:
+                       Globals.instance.animations.remove(ani)
+                       self.move_to((self.x, self.y))
+              break
+       if clear and self.falling is False:
+          self.falling = True
+          dest = (self.x, Globals.instance.GRID_HEIGHT-to_grid(self.virt_rect[3]))
+          if self.pos != dest:
+             self.move_to((self.x, Globals.instance.GRID_HEIGHT-to_grid(self.virt_rect[3])))
+
 
     def _continue_key(self, key, distance, **kwargs):
         p = kwargs.get('precondition', None)

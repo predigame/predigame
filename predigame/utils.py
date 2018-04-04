@@ -27,12 +27,14 @@ def import_plugin(plugin_file):
 
 def register_cell(pos, s):
     """ helper function that builds the index of all sprites in a given cell """
-    lst = []
-    if pos in Globals.instance.cells:
-        lst = Globals.instance.cells[pos]
-    else:
-        Globals.instance.cells[pos] = lst
-    lst.append(s)
+    area = to_area(to_grid(s.virt_rect))
+    for p in area:
+        lst = []
+        if p in Globals.instance.cells:
+            lst = Globals.instance.cells[p]
+        else:
+            Globals.instance.cells[p] = lst
+        lst.append(s)
 
 def register_keydown(key, callback):
     # single key callbacks
@@ -63,6 +65,27 @@ def at(pos):
             return lst[0]
         else:
             return lst
+
+def to_grid(screen_pos):
+    """ converts screen coordinates to grid coordinates """
+    if isinstance(screen_pos, list):
+        return tuple(((x / (Globals.instance.GRID_SIZE * 1.0)) for x in screen_pos))
+    else:
+        return screen_pos / (Globals.instance.GRID_SIZE * 1.0)
+
+def to_area(virt_rect):
+    """ takes a upper_left point, width and height and returns full covering area (as list) """
+    cover = []
+    x = virt_rect[0]
+    y = virt_rect[1]
+    w = virt_rect[2]
+    h = virt_rect[3]
+
+    for i in range(int(w)):
+        for j in range(int(h)):
+            cover.append((int(x)+i, int(y)+j))
+
+    return cover
 
 def is_wall(pos):
     """ returns true if a wall is at the desired location, false otherwise """
