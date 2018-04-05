@@ -322,7 +322,7 @@ class Sprite():
         x_dest = int(self.x + vector[0])
         y_dest = int(self.y + vector[1])
         time = self._calc_time(vector)
-        if precondition == None or precondition('move', self, (x_dest, y_dest)):
+        if precondition == None or precondition('move', self, vector):
             animate(self, time, partial(self._complete_move, callback), abortable=self.abortable, gravity=gravity, x = x_dest, y = y_dest)
         else:
             animate(self, time, partial(self._complete_move, callback), abortable=self.abortable, gravity=gravity, x = self.x, y = self.y)
@@ -400,8 +400,8 @@ class Sprite():
                        self.move_to((self.x, self.y), gravity=True)
                  return
 
-       if clear and not has_animation(self):
-             print('time to fall')
+       if clear and has_animation(self) is False:
+             print('time to fall {} --> {}'.format((self.x, self.y), ((self.x, Globals.instance.GRID_HEIGHT-to_grid(self.virt_rect[3])))))
              #print('{} --> {}'.format(self.pos, dest))
              self.falling = True
              self.move_to((self.x, Globals.instance.GRID_HEIGHT-to_grid(self.virt_rect[3])),gravity=True)
@@ -413,7 +413,6 @@ class Sprite():
             self.move(distance, callback = partial(self._continue_key, key, distance, precondition = p), precondition = p)
 
     def _key_move(self, vector, **kwargs):
-        print(self.falling)
         if self.falling is False and (self.mass == 0 or vector[1] == 0):
            self.move(vector, **kwargs)
 

@@ -299,19 +299,27 @@ def track(sprite, find_tags, pbad = 0.1) :
     if best is not None and best != (x,y):
         sprite.move((best[0] - x, best[1] - y))
 
-def player_physics(action, sprite, pos):
+def player_physics(action, sprite, vector):
     """ simple physical model that keep a player from walking into obstacles """
-    cover_area = to_area(to_grid(sprite.virt_rect))
-    print(pos)
-    obj = at(pos)
-    if obj and isinstance(obj, list):
-        for x in obj:
-            if x.tag == OBSTACLE:
-                return False
-    elif obj and obj.tag == OBSTACLE:
-        return False
-    elif not visible(pos):
-        return False
+    area = []
+    if sprite.width > 1 or sprite.height > 1:
+        area = to_area(to_grid(sprite.virt_rect))
+    else:
+        area.append(sprite.pos)
+
+    # shift each point by the vector
+    area = list((x + vector[0], y + vector[1]) for x,y in area)
+
+    for pos in area:
+        obj = at(pos)
+        if obj and isinstance(obj, list):
+            for x in obj:
+                if x.tag == OBSTACLE:
+                    return False
+        elif obj and obj.tag == OBSTACLE:
+            return False
+        elif not visible(pos):
+            return False
     return True
 
 def fill(obj, prob = 1, collide_obj = None, collide_callback = None) :
