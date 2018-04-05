@@ -114,6 +114,7 @@ class Actor(Sprite):
     def move_to(self, *points, **kwargs):
         callback = kwargs.get('callback', None)
         pabort = kwargs.get('pabort', -1)
+        gravity = kwargs.get('gravity', False)
 
         if self._stop:
            self._stop = False
@@ -127,16 +128,16 @@ class Actor(Sprite):
               if is_wall(head):
                  self.act(IDLE, FOREVER)
               else:
-                 self.move((head[0]-self.x, head[1]-self.y), callback=partial(self.move_to, *tail, **kwargs))
+                 self.move((head[0]-self.x, head[1]-self.y), callback=partial(self.move_to, *tail, **kwargs), gravity=gravity)
            else:
               head = points[0]
               if is_wall(head):
                  self.act(IDLE, FOREVER)
               else:
                  if callback is not None:
-                    self.move((head[0]-self.x, head[1]-self.y), callback=callback)
+                    self.move((head[0]-self.x, head[1]-self.y), callback=callback, gravity=gravity)
                  else:
-                    self.move((head[0]-self.x, head[1]-self.y), callback=partial(self.act, IDLE, FOREVER))
+                    self.move((head[0]-self.x, head[1]-self.y), callback=partial(self.act, IDLE, FOREVER), gravity=gravity)
 
     def _complete_move(self, callback = None):
         if self.health == 0:

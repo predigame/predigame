@@ -1,7 +1,7 @@
 from .Globals import Globals
 import math
 class Animation:
-    def __init__(self, obj, duration, callback, abortable=False, **kwargs):
+    def __init__(self, obj, duration, callback, abortable=False, gravity=False, **kwargs):
         self.obj = obj
         self.start = {}
         self.attributes = kwargs
@@ -17,9 +17,14 @@ class Animation:
         self.callback = callback
         self.finished = False
         self.abortable = abortable
+        self.gravity = gravity
+        self.acceleration = 0.01
 
     def update(self, delta):
-        self.time += delta / 1000
+        self.time += (delta / 1000)
+        if self.gravity:
+           #print('adding gravity {} from {} {}'.format(self.acceleration * self.obj.mass, self.acceleration, self.obj.mass))
+           self.time += self.acceleration * self.obj.mass
         n = self.time / self.duration
 
         if n >= 1:
@@ -28,6 +33,7 @@ class Animation:
 
         for attribute in self.attributes:
             step = self.attributes[attribute] - self.start[attribute]
+            #print('{} : {} --> {} [{}]'.format(attribute, getattr(self.obj, attribute), n * step + self.start[attribute], n * step + self.start[attribute]-getattr(self.obj, attribute)))
             setattr(self.obj, attribute, n * step + self.start[attribute])
 
     def abort(self):

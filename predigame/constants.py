@@ -94,6 +94,8 @@ BACK = 'back'
 FRONT = 'front'
 POSE = 'pose'
 
+OBSTACLE = 'wall'
+
 # other contants
 FOREVER = -1
 

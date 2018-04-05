@@ -1,6 +1,6 @@
 import sys, random, math, pygame
 from functools import partial
-from .utils import register_keydown, register_keyup, animate, randrange_float, sign, to_grid, to_area, at
+from .utils import register_keydown, register_keyup, animate, randrange_float, sign, to_grid, to_area, at, has_animation
 from .Globals import Globals
 
 class Sprite():
@@ -313,17 +313,19 @@ class Sprite():
 
             :param precondition: an optional callback function to invoke prior to a movement. preconditions all the sprite to avoid making a certain move (e.g. to avoid a wall)
         """
+
         self.moving = True
         callback = kwargs.get('callback', None)
         precondition = kwargs.get('precondition', None)
+        gravity = kwargs.get('gravity', False)
 
         x_dest = int(self.x + vector[0])
         y_dest = int(self.y + vector[1])
         time = self._calc_time(vector)
         if precondition == None or precondition('move', self, (x_dest, y_dest)):
-            animate(self, time, partial(self._complete_move, callback), abortable=self.abortable, x = x_dest, y = y_dest)
+            animate(self, time, partial(self._complete_move, callback), abortable=self.abortable, gravity=gravity, x = x_dest, y = y_dest)
         else:
-            animate(self, time, partial(self._complete_move, callback), abortable=self.abortable, x = self.x, y = self.y)
+            animate(self, time, partial(self._complete_move, callback), abortable=self.abortable, gravity=gravity, x = self.x, y = self.y)
         return self
 
     def move_to(self, *points, **kwargs):
@@ -347,6 +349,7 @@ class Sprite():
         self.moving = True
 
         callback = partial(self._complete_move, kwargs.get('callback', None))
+        gravity = kwargs.get('gravity', False)
         times = []
 
         for index, point in enumerate(points):
@@ -360,7 +363,7 @@ class Sprite():
 
         for point in reversed(points):
             time = times.pop(-1)
-            callback = partial(animate, self, time, callback, abortable=self.abortable, x = point[0], y = point[1])
+            callback = partial(animate, self, time, callback, abortable=self.abortable, gravity=gravity, x = point[0], y = point[1])
 
         callback()
         return self
@@ -371,7 +374,18 @@ class Sprite():
        # add bouncingness on the fall (should be based on the type of landing surface)
        # fix actor keys to respect laws of gravity (respect objects, can't go up)
 
+       # animations need to include acceleration only when falling due to gravity
+       # sprites *not* falling when you hit the bottom of the floor
+
        cover_area = to_area(to_grid(self.virt_rect))
+
+       # see if any cover points are on the floor (not falling)
+       for p in cover_area:
+          if p[1] >= Globals.instance.GRID_HEIGHT - 1:
+             self.falling = False
+             return
+
+       # see if any the next points will hit an obstacle
        next_area = list(map(lambda p : (p[0], p[1]+1), cover_area))
        clear = True
        for p in next_area:
@@ -381,20 +395,28 @@ class Sprite():
                  self.falling = False
                  for ani in Globals.instance.animations:
                     if ani.obj == self:
+                       print('dump')
                        Globals.instance.animations.remove(ani)
-                       self.move_to((self.x, self.y))
-              break
-       if clear and self.falling is False:
-          self.falling = True
-          dest = (self.x, Globals.instance.GRID_HEIGHT-to_grid(self.virt_rect[3]))
-          if self.pos != dest:
-             self.move_to((self.x, Globals.instance.GRID_HEIGHT-to_grid(self.virt_rect[3])))
+                       self.move_to((self.x, self.y), gravity=True)
+                 return
+
+       if clear and not has_animation(self):
+             print('time to fall')
+             #print('{} --> {}'.format(self.pos, dest))
+             self.falling = True
+             self.move_to((self.x, Globals.instance.GRID_HEIGHT-to_grid(self.virt_rect[3])),gravity=True)
 
 
     def _continue_key(self, key, distance, **kwargs):
         p = kwargs.get('precondition', None)
         if key in Globals.instance.keys_pressed:
             self.move(distance, callback = partial(self._continue_key, key, distance, precondition = p), precondition = p)
+
+    def _key_move(self, vector, **kwargs):
+        print(self.falling)
+        if self.falling is False and (self.mass == 0 or vector[1] == 0):
+           self.move(vector, **kwargs)
+
 
     def keys(self, right = 'right', left = 'left', up = 'up', down = 'down', **kwargs):
         """
@@ -426,13 +448,13 @@ class Sprite():
             register_key = register_keyup
 
         if right:
-            register_key(right, partial(self.move, (1 * distance, 0), callback = partial(self._continue_key, right, (1 * distance, 0), precondition = p), precondition = p))
+            register_key(right, partial(self._key_move, (1 * distance, 0), callback = partial(self._continue_key, right, (1 * distance, 0), precondition = p), precondition = p))
         if left:
-            register_key(left, partial(self.move, (-1 * distance, 0), callback = partial(self._continue_key, left, (-1 * distance, 0), precondition = p), precondition = p))
+            register_key(left, partial(self._key_move, (-1 * distance, 0), callback = partial(self._continue_key, left, (-1 * distance, 0), precondition = p), precondition = p))
         if up:
-            register_key(up, partial(self.move, (0, -1 * distance), callback = partial(self._continue_key, up, (0, -1 * distance), precondition = p), precondition = p))
+            register_key(up, partial(self._key_move, (0, -1 * distance), callback = partial(self._continue_key, up, (0, -1 * distance), precondition = p), precondition = p))
         if down:
-            register_key(down, partial(self.move, (0, 1 * distance), callback = partial(self._continue_key, down, (0, 1 * distance), precondition = p), precondition = p))
+            register_key(down, partial(self._key_move, (0, 1 * distance), callback = partial(self._continue_key, down, (0, 1 * distance), precondition = p), precondition = p))
 
         return self
 

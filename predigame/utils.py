@@ -53,8 +53,15 @@ def register_keyup(key, callback):
     #else:
     #    Globals.instance.keys_registered['keyup'][key] = set([callback])
 
-def animate(obj, duration = 1, callback = None, abortable=False, **kwargs):
-    Globals.instance.animations.append(Animation(obj, duration, callback, abortable, **kwargs))
+def has_animation(obj):
+    for o in Globals.instance.animations:
+        if o.obj == obj and o.gravity == True:
+            return True
+    else:
+        return False
+
+def animate(obj, duration = 1, callback = None, abortable=False, gravity=False, **kwargs):
+    Globals.instance.animations.append(Animation(obj, duration, callback, abortable, gravity, **kwargs))
 
 def at(pos):
     if pos in Globals.instance.cells:
@@ -69,9 +76,9 @@ def at(pos):
 def to_grid(screen_pos):
     """ converts screen coordinates to grid coordinates """
     if isinstance(screen_pos, list):
-        return tuple(((x / (Globals.instance.GRID_SIZE * 1.0)) for x in screen_pos))
+        return tuple((int((x / (Globals.instance.GRID_SIZE * 1.0))) for x in screen_pos))
     else:
-        return screen_pos / (Globals.instance.GRID_SIZE * 1.0)
+        return int(screen_pos / (Globals.instance.GRID_SIZE * 1.0))
 
 def to_area(virt_rect):
     """ takes a upper_left point, width and height and returns full covering area (as list) """
@@ -145,7 +152,7 @@ def rand_maze(callback):
         row = rows[rnum]
         for cnum in range(len(row)):
             if row[cnum] == 'O':
-                s = callback(pos=(cnum,rnum), tag='wall')
+                s = callback(pos=(cnum,rnum), tag=OBSTACLE)
                 register_cell((cnum, rnum), s)
 
 def rand_color():
@@ -293,13 +300,15 @@ def track(sprite, find_tags, pbad = 0.1) :
         sprite.move((best[0] - x, best[1] - y))
 
 def player_physics(action, sprite, pos):
-    """ simple physical model that keep a player from walking into walls """
+    """ simple physical model that keep a player from walking into obstacles """
+    cover_area = to_area(to_grid(sprite.virt_rect))
+    print(pos)
     obj = at(pos)
     if obj and isinstance(obj, list):
         for x in obj:
-            if x.tag == 'wall':
+            if x.tag == OBSTACLE:
                 return False
-    elif obj and obj.tag == 'wall':
+    elif obj and obj.tag == OBSTACLE:
         return False
     elif not visible(pos):
         return False
