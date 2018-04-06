@@ -20,6 +20,7 @@ class Actor(Sprite):
                 img = pygame.transform.scale(img, rect.size)
                 self.actions[action].append(img)
 
+        self.jump_height = 3
         self.index = 0
         self.action_iterations = 0
         self.action = IDLE
@@ -89,11 +90,11 @@ class Actor(Sprite):
         self._stop = True
 
     def move(self, vector, **kwargs):
-
+        action = kwargs.get('action', WALK + '_' + self.direction)
         if self.health == 0:
             return
 
-        direction = LEFT
+        direction = None
         if vector[0] == 1:
             direction = RIGHT
         elif vector[0] == -1:
@@ -103,41 +104,41 @@ class Actor(Sprite):
         elif vector[1] == -1:
             direction = BACK
 
-        if direction != self.direction:
-            self.index = 0
+        if direction is not None:
+            if direction != self.direction:
+                self.index = 0
+            self.direction = direction
 
-        self.direction = direction
-
-        self.act(WALK + '_' + direction, FOREVER)
+        self.act(action, FOREVER)
         Sprite.move(self, vector, **kwargs)
 
     def move_to(self, *points, **kwargs):
         callback = kwargs.get('callback', None)
         pabort = kwargs.get('pabort', -1)
-        gravity = kwargs.get('gravity', False)
+        action = kwargs.get('action', None)
 
         if self._stop:
            self._stop = False
         elif len(points) == 0:
-           self.act(IDLE, FOREVER)
+           self.act(IDLE+ '_' + self.direction, FOREVER)
         elif random.uniform(0, 1) <= pabort:
-           self.act(IDLE, FOREVER)
+           self.act(IDLE+ '_' + self.direction, FOREVER)
         else:
            if len(points) > 1:
               head, *tail = points
-              if is_wall(head):
-                 self.act(IDLE, FOREVER)
-              else:
-                 self.move((head[0]-self.x, head[1]-self.y), callback=partial(self.move_to, *tail, **kwargs), gravity=gravity)
+              self.move((head[0]-self.x, head[1]-self.y), callback=partial(self.move_to, *tail, **kwargs), action=action)
            else:
               head = points[0]
-              if is_wall(head):
-                 self.act(IDLE, FOREVER)
+              if callback is not None:
+                 self.move((head[0]-self.x, head[1]-self.y), callback=callback, action=action)
               else:
-                 if callback is not None:
-                    self.move((head[0]-self.x, head[1]-self.y), callback=callback, gravity=gravity)
-                 else:
-                    self.move((head[0]-self.x, head[1]-self.y), callback=partial(self.act, IDLE, FOREVER), gravity=gravity)
+                 self.move((head[0]-self.x, head[1]-self.y), callback=partial(self.act, IDLE+ '_' + self.direction, FOREVER), action=action)
+
+    def jump(self, height = None):
+       if height == None:
+          height = self.jump_height
+       #self.act(JUMP + '_' + self.direction, FOREVER)
+       self.move((0, -height), action=JUMP + '_' + self.direction)
 
     def _complete_move(self, callback = None):
         if self.health == 0:
@@ -200,6 +201,8 @@ class Actor(Sprite):
         return self
 
     def act(self, action, loop=FOREVER):
+        if action == GRAVITY or action == None:
+           action = IDLE + '_' + self.direction
         if self.health > 0 or action.startswith(DIE):
             if action in self.actions:
                 self.actit(action, loop)

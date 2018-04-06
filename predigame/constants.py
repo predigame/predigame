@@ -95,6 +95,7 @@ FRONT = 'front'
 POSE = 'pose'
 
 OBSTACLE = 'wall'
+GRAVITY = 0
 
 # other contants
 FOREVER = -1

@@ -53,15 +53,15 @@ def register_keyup(key, callback):
     #else:
     #    Globals.instance.keys_registered['keyup'][key] = set([callback])
 
-def has_animation(obj):
+def has_animation(obj, action=GRAVITY):
     for o in Globals.instance.animations:
-        if o.obj == obj and o.gravity == True:
+        if o.obj == obj:
             return True
     else:
         return False
 
-def animate(obj, duration = 1, callback = None, abortable=False, gravity=False, **kwargs):
-    Globals.instance.animations.append(Animation(obj, duration, callback, abortable, gravity, **kwargs))
+def animate(obj, duration = 1, callback = None, abortable=False, action=None, **kwargs):
+    Globals.instance.animations.append(Animation(obj, duration, callback, abortable, action, **kwargs))
 
 def at(pos):
     if pos in Globals.instance.cells:

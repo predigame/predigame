@@ -2,6 +2,7 @@ import sys, random, math, pygame
 from functools import partial
 from .utils import register_keydown, register_keyup, animate, randrange_float, sign, to_grid, to_area, at, has_animation
 from .Globals import Globals
+from .constants import *
 
 class Sprite():
     """
@@ -317,15 +318,15 @@ class Sprite():
         self.moving = True
         callback = kwargs.get('callback', None)
         precondition = kwargs.get('precondition', None)
-        gravity = kwargs.get('gravity', False)
+        action = kwargs.get('action', None)
 
         x_dest = int(self.x + vector[0])
         y_dest = int(self.y + vector[1])
         time = self._calc_time(vector)
         if precondition == None or precondition('move', self, vector):
-            animate(self, time, partial(self._complete_move, callback), abortable=self.abortable, gravity=gravity, x = x_dest, y = y_dest)
+            animate(self, time, partial(self._complete_move, callback), abortable=self.abortable, action=action, x = x_dest, y = y_dest)
         else:
-            animate(self, time, partial(self._complete_move, callback), abortable=self.abortable, gravity=gravity, x = self.x, y = self.y)
+            animate(self, time, partial(self._complete_move, callback), abortable=self.abortable, action=action, x = self.x, y = self.y)
         return self
 
     def move_to(self, *points, **kwargs):
@@ -349,7 +350,7 @@ class Sprite():
         self.moving = True
 
         callback = partial(self._complete_move, kwargs.get('callback', None))
-        gravity = kwargs.get('gravity', False)
+        action = kwargs.get('action', None)
         times = []
 
         for index, point in enumerate(points):
@@ -363,19 +364,16 @@ class Sprite():
 
         for point in reversed(points):
             time = times.pop(-1)
-            callback = partial(animate, self, time, callback, abortable=self.abortable, gravity=gravity, x = point[0], y = point[1])
+            callback = partial(animate, self, time, callback, abortable=self.abortable, action=action, x = point[0], y = point[1])
 
         callback()
         return self
 
     def _update_gravity(self):
-       # update acceleration (add to animation -- longer it runs.. the faster you fall)
        # check for angular rolling?
        # add bouncingness on the fall (should be based on the type of landing surface)
-       # fix actor keys to respect laws of gravity (respect objects, can't go up)
-
-       # animations need to include acceleration only when falling due to gravity
-       # sprites *not* falling when you hit the bottom of the floor
+       # add animation prechecks to keep feet from falling through blocks on the fall
+       # it's possible to walk across air
 
        cover_area = to_area(to_grid(self.virt_rect))
 
@@ -395,16 +393,14 @@ class Sprite():
                  self.falling = False
                  for ani in Globals.instance.animations:
                     if ani.obj == self:
-                       print('dump')
                        Globals.instance.animations.remove(ani)
-                       self.move_to((self.x, self.y), gravity=True)
+                       self.move_to((self.x, self.y), action=GRAVITY)
                  return
 
-       if clear and has_animation(self) is False:
-             print('time to fall {} --> {}'.format((self.x, self.y), ((self.x, Globals.instance.GRID_HEIGHT-to_grid(self.virt_rect[3])))))
+       if clear and has_animation(self, GRAVITY) is False:
              #print('{} --> {}'.format(self.pos, dest))
              self.falling = True
-             self.move_to((self.x, Globals.instance.GRID_HEIGHT-to_grid(self.virt_rect[3])),gravity=True)
+             self.move_to((self.x, Globals.instance.GRID_HEIGHT-to_grid(self.virt_rect[3])),action=GRAVITY)
 
 
     def _continue_key(self, key, distance, **kwargs):
