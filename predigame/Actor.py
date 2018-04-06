@@ -120,19 +120,25 @@ class Actor(Sprite):
         if self._stop:
            self._stop = False
         elif len(points) == 0:
-           self.act(IDLE+ '_' + self.direction, FOREVER)
+           self.act(IDLE, FOREVER)
         elif random.uniform(0, 1) <= pabort:
-           self.act(IDLE+ '_' + self.direction, FOREVER)
+           self.act(IDLE, FOREVER)
         else:
            if len(points) > 1:
               head, *tail = points
-              self.move((head[0]-self.x, head[1]-self.y), callback=partial(self.move_to, *tail, **kwargs), action=action)
+              if is_wall(head):
+                 self.act(IDLE, FOREVER)
+              else:
+                 self.move((head[0]-self.x, head[1]-self.y), callback=partial(self.move_to, *tail, **kwargs), action=action)
            else:
               head = points[0]
-              if callback is not None:
-                 self.move((head[0]-self.x, head[1]-self.y), callback=callback, action=action)
+              if is_wall(head):
+                 self.act(IDLE, FOREVER)
               else:
-                 self.move((head[0]-self.x, head[1]-self.y), callback=partial(self.act, IDLE+ '_' + self.direction, FOREVER), action=action)
+                 if callback is not None:
+                    self.move((head[0]-self.x, head[1]-self.y), callback=callback, action=action)
+                 else:
+                    self.move((head[0]-self.x, head[1]-self.y), callback=partial(self.act, IDLE, FOREVER), action=action)
 
     def jump(self, height = None):
        if height == None:
@@ -202,7 +208,7 @@ class Actor(Sprite):
 
     def act(self, action, loop=FOREVER):
         if action == GRAVITY or action == None:
-           action = IDLE + '_' + self.direction
+           action = IDLE# + '_' + self.direction
         if self.health > 0 or action.startswith(DIE):
             if action in self.actions:
                 self.actit(action, loop)
