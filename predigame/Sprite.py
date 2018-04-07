@@ -1,8 +1,9 @@
 import sys, random, math, pygame
 from functools import partial
-from .utils import register_keydown, register_keyup, animate, randrange_float, sign, to_grid, to_area, at, has_animation
+from .utils import register_keydown, register_keyup, animate, randrange_float, sign, to_grid, to_area, at, has_animation, get_animation
 from .Globals import Globals
 from .constants import *
+import time
 
 class Sprite():
     """
@@ -12,7 +13,7 @@ class Sprite():
     have some fun properties - they can be clicked, collide with other sprites, even fade, spin or pulse.
 
     """
-    def __init__(self, surface, rect, tag=None, abortable=True, name=None):
+    def __init__(self, surface, rect, tag=None, abortable=False, name=None):
         if len(Globals.instance.sprites) >= 9000:
             sys.exit('Too many sprites! You\'re trying to spawn over 9,000!')
         self.surface = surface.convert_alpha()
@@ -318,7 +319,7 @@ class Sprite():
         self.moving = True
         callback = kwargs.get('callback', None)
         precondition = kwargs.get('precondition', None)
-        action = kwargs.get('action', None)
+        action = kwargs.get('action', WALK)
 
         x_dest = int(self.x + vector[0])
         y_dest = int(self.y + vector[1])
@@ -375,13 +376,19 @@ class Sprite():
        # add animation prechecks to keep feet from falling through blocks on the fall
        # it's possible to walk across air
 
-       cover_area = to_area(to_grid(self.virt_rect))
+       cover_area = to_area(self.x, self.y, self.width, self.height)
 
        # see if any cover points are on the floor (not falling)
        for p in cover_area:
           if p[1] >= Globals.instance.GRID_HEIGHT - 1:
              self.falling = False
              return
+
+       # animations for this sprite?
+       ani = get_animation(self)
+
+       if ani is not None and ani.action == JUMP:
+          return
 
        # see if any the next points will hit an obstacle
        next_area = list(map(lambda p : (p[0], p[1]+1), cover_area))
@@ -391,22 +398,23 @@ class Sprite():
               clear = False
               if self.falling:
                  self.falling = False
-                 for ani in Globals.instance.animations:
-                    if ani.obj == self:
-                       Globals.instance.animations.remove(ani)
-                       self.move_to((self.x, self.y), action=GRAVITY)
+                 if ani is not None:
+                    Globals.instance.animations.remove(ani)
+                    self.move_to((self.x, self.y), action=GRAVITY)
+                 print('Returning from gravity.. not sure why?')
                  return
 
-       if clear and has_animation(self, GRAVITY) is False:
-             #print('{} --> {}'.format(self.pos, dest))
+       if clear and (ani is None or ani.action != GRAVITY):
+             print('Falling? {} --> {}'.format(self.pos, Globals.instance.GRID_HEIGHT-self.height))
              self.falling = True
-             self.move_to((self.x, Globals.instance.GRID_HEIGHT-to_grid(self.virt_rect[3])),action=GRAVITY)
+             self.move_to((self.x, self.y+1),action=GRAVITY)
 
 
     def _continue_key(self, key, distance, **kwargs):
+        #if self.falling is False:
         p = kwargs.get('precondition', None)
         if key in Globals.instance.keys_pressed:
-            self.move(distance, callback = partial(self._continue_key, key, distance, precondition = p), precondition = p)
+           self.move(distance, callback = partial(self._continue_key, key, distance, precondition = p), precondition = p)
 
     def _key_move(self, vector, **kwargs):
         if self.falling is False and (self.mass == 0 or vector[1] == 0):

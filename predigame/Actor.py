@@ -3,7 +3,7 @@ from time import time
 from .Sprite import Sprite
 from .constants import *
 from .Globals import Globals
-from .utils import at, get, is_wall
+from .utils import at, get, is_wall, get_animation
 from .Inventory import *
 from functools import partial
 
@@ -20,7 +20,7 @@ class Actor(Sprite):
                 img = pygame.transform.scale(img, rect.size)
                 self.actions[action].append(img)
 
-        self.jump_height = 3
+        self.jump_height = 5
         self.index = 0
         self.action_iterations = 0
         self.action = IDLE
@@ -90,32 +90,34 @@ class Actor(Sprite):
         self._stop = True
 
     def move(self, vector, **kwargs):
-        action = kwargs.get('action', WALK + '_' + self.direction)
+        animation = kwargs.get('animation', WALK + '_' + self.direction)
+        action = kwargs.get('action', WALK)
         if self.health == 0:
             return
 
         direction = None
-        if vector[0] == 1:
-            direction = RIGHT
-        elif vector[0] == -1:
-            direction = LEFT
-        elif vector[1] == 1:
-            direction = FRONT
-        elif vector[1] == -1:
-            direction = BACK
+        if action == WALK:
+            if vector[0] > 0:
+                direction = RIGHT
+            elif vector[0] < 0:
+                direction = LEFT
+            elif vector[1] > 0:
+                direction = FRONT
+            elif vector[1] < 0:
+                direction = BACK
 
         if direction is not None:
             if direction != self.direction:
                 self.index = 0
             self.direction = direction
 
-        self.act(action, FOREVER)
+        self.act(WALK + '_' + self.direction, FOREVER)
         Sprite.move(self, vector, **kwargs)
 
     def move_to(self, *points, **kwargs):
         callback = kwargs.get('callback', None)
         pabort = kwargs.get('pabort', -1)
-        action = kwargs.get('action', None)
+        action = kwargs.get('action', WALK)
 
         if self._stop:
            self._stop = False
@@ -138,13 +140,26 @@ class Actor(Sprite):
                  if callback is not None:
                     self.move((head[0]-self.x, head[1]-self.y), callback=callback, action=action)
                  else:
-                    self.move((head[0]-self.x, head[1]-self.y), callback=partial(self.act, IDLE, FOREVER), action=action)
+                    self.move((head[0]-self.x, head[1]-self.y), callback=partial(self.act, IDLE+'_'+self.direction, FOREVER), action=action)
 
     def jump(self, height = None):
        if height == None:
           height = self.jump_height
+
+       ani = get_animation(self)
+       if self.falling or (ani is not None and ani.action == JUMP):
+          return
+
+       lateral = 0
+       if ani is not None and ani.action == WALK:
+          print('walk and jump')
+          if self.direction == LEFT:
+             lateral = -2
+          else:
+             lateral = 2
+
        #self.act(JUMP + '_' + self.direction, FOREVER)
-       self.move((0, -height), action=JUMP + '_' + self.direction)
+       self.move((lateral, -height), animation=WALK + '_' + self.direction, action=JUMP)
 
     def _complete_move(self, callback = None):
         if self.health == 0:
@@ -208,7 +223,7 @@ class Actor(Sprite):
 
     def act(self, action, loop=FOREVER):
         if action == GRAVITY or action == None:
-           action = IDLE# + '_' + self.direction
+           action = IDLE + '_' + self.direction
         if self.health > 0 or action.startswith(DIE):
             if action in self.actions:
                 self.actit(action, loop)

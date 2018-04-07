@@ -5,6 +5,7 @@ from .Animation import Animation
 from .constants import *
 from astar import AStar
 from functools import partial
+from math import ceil
 
 def load_module(path, api):
     src = open(path).read()
@@ -27,7 +28,7 @@ def import_plugin(plugin_file):
 
 def register_cell(pos, s):
     """ helper function that builds the index of all sprites in a given cell """
-    area = to_area(to_grid(s.virt_rect))
+    area = to_area(s.x, s.y, s.width, s.height)
     for p in area:
         lst = []
         if p in Globals.instance.cells:
@@ -55,10 +56,16 @@ def register_keyup(key, callback):
 
 def has_animation(obj, action=GRAVITY):
     for o in Globals.instance.animations:
-        if o.obj == obj:
+        if o.obj == obj and o.action == action:
             return True
     else:
         return False
+
+def get_animation(obj):
+    for o in Globals.instance.animations:
+        if o.obj == obj:
+            return o
+
 
 def animate(obj, duration = 1, callback = None, abortable=False, action=None, **kwargs):
     Globals.instance.animations.append(Animation(obj, duration, callback, abortable, action, **kwargs))
@@ -80,16 +87,11 @@ def to_grid(screen_pos):
     else:
         return int(screen_pos / (Globals.instance.GRID_SIZE * 1.0))
 
-def to_area(virt_rect):
+def to_area(x, y, w, h):
     """ takes a upper_left point, width and height and returns full covering area (as list) """
     cover = []
-    x = virt_rect[0]
-    y = virt_rect[1]
-    w = virt_rect[2]
-    h = virt_rect[3]
-
-    for i in range(int(w)):
-        for j in range(int(h)):
+    for i in range(int(ceil(w))):
+        for j in range(int(ceil(h))):
             cover.append((int(x)+i, int(y)+j))
 
     return cover
@@ -302,8 +304,8 @@ def track(sprite, find_tags, pbad = 0.1) :
 def player_physics(action, sprite, vector):
     """ simple physical model that keep a player from walking into obstacles """
     area = []
-    if sprite.width > 1 or sprite.height > 1:
-        area = to_area(to_grid(sprite.virt_rect))
+    if ceil(sprite.width) > 1 or ceil(sprite.height) > 1:
+        area = to_area(sprite.x, sprite.y, sprite.width, sprite.height)
     else:
         area.append(sprite.pos)
 
