@@ -58,6 +58,11 @@ DIE_FRONT = 'die_front'
 DIE_LEFT = 'die_left'
 DIE_RIGHT = 'die_right'
 
+JUMP_BACK = 'jump_back'
+JUMP_FRONT = 'jump_front'
+JUMP_LEFT = 'jump_left'
+JUMP_RIGHT = 'jump_right'
+
 IDLE_BACK = 'idle_back'
 IDLE_FRONT = 'idle_front'
 IDLE_LEFT = 'idle_left'

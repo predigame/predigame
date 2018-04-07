@@ -92,6 +92,7 @@ class Actor(Sprite):
     def move(self, vector, **kwargs):
         animation = kwargs.get('animation', WALK + '_' + self.direction)
         action = kwargs.get('action', WALK)
+
         if self.health == 0:
             return
 
@@ -111,13 +112,14 @@ class Actor(Sprite):
                 self.index = 0
             self.direction = direction
 
-        self.act(WALK + '_' + self.direction, FOREVER)
+        self.act(animation, FOREVER)
         Sprite.move(self, vector, **kwargs)
 
     def move_to(self, *points, **kwargs):
         callback = kwargs.get('callback', None)
         pabort = kwargs.get('pabort', -1)
         action = kwargs.get('action', WALK)
+        animation = kwargs.get('animation', WALK + '_' + self.direction)
 
         if self._stop:
            self._stop = False
@@ -131,16 +133,16 @@ class Actor(Sprite):
               if is_wall(head):
                  self.act(IDLE, FOREVER)
               else:
-                 self.move((head[0]-self.x, head[1]-self.y), callback=partial(self.move_to, *tail, **kwargs), action=action)
+                 self.move((head[0]-self.x, head[1]-self.y), callback=partial(self.move_to, *tail, **kwargs), action=action, animation=animation)
            else:
               head = points[0]
               if is_wall(head):
                  self.act(IDLE, FOREVER)
               else:
                  if callback is not None:
-                    self.move((head[0]-self.x, head[1]-self.y), callback=callback, action=action)
+                    self.move((head[0]-self.x, head[1]-self.y), callback=callback, action=action, animation=animation)
                  else:
-                    self.move((head[0]-self.x, head[1]-self.y), callback=partial(self.act, IDLE+'_'+self.direction, FOREVER), action=action)
+                    self.move((head[0]-self.x, head[1]-self.y), callback=partial(self.act, IDLE+'_'+self.direction, FOREVER), action=action, animation=animation)
 
     def jump(self, height = None):
        if height == None:
