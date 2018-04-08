@@ -1,5 +1,6 @@
 from setuptools import setup, find_packages
 
+
 setup(
     name = 'predigame',
     version = '1.2.1',
