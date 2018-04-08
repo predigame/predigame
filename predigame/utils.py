@@ -5,6 +5,7 @@ from .Animation import Animation
 from .constants import *
 from astar import AStar
 from functools import partial
+from math import ceil
 
 def load_module(path, api):
     src = open(path).read()
@@ -27,12 +28,14 @@ def import_plugin(plugin_file):
 
 def register_cell(pos, s):
     """ helper function that builds the index of all sprites in a given cell """
-    lst = []
-    if pos in Globals.instance.cells:
-        lst = Globals.instance.cells[pos]
-    else:
-        Globals.instance.cells[pos] = lst
-    lst.append(s)
+    area = to_area(s.x, s.y, s.width, s.height)
+    for p in area:
+        lst = []
+        if p in Globals.instance.cells:
+            lst = Globals.instance.cells[p]
+        else:
+            Globals.instance.cells[p] = lst
+        lst.append(s)
 
 def register_keydown(key, callback):
     # single key callbacks
@@ -51,8 +54,21 @@ def register_keyup(key, callback):
     #else:
     #    Globals.instance.keys_registered['keyup'][key] = set([callback])
 
-def animate(obj, duration = 1, callback = None, abortable=False, **kwargs):
-    Globals.instance.animations.append(Animation(obj, duration, callback, abortable, **kwargs))
+def has_animation(obj, action=GRAVITY):
+    for o in Globals.instance.animations:
+        if o.obj == obj and o.action == action:
+            return True
+    else:
+        return False
+
+def get_animation(obj):
+    for o in Globals.instance.animations:
+        if o.obj == obj:
+            return o
+
+
+def animate(obj, duration = 1, callback = None, abortable=False, action=None, **kwargs):
+    Globals.instance.animations.append(Animation(obj, duration, callback, abortable, action, **kwargs))
 
 def at(pos):
     if pos in Globals.instance.cells:
@@ -63,6 +79,22 @@ def at(pos):
             return lst[0]
         else:
             return lst
+
+def to_grid(screen_pos):
+    """ converts screen coordinates to grid coordinates """
+    if isinstance(screen_pos, list):
+        return tuple((int((x / (Globals.instance.GRID_SIZE * 1.0))) for x in screen_pos))
+    else:
+        return int(screen_pos / (Globals.instance.GRID_SIZE * 1.0))
+
+def to_area(x, y, w, h):
+    """ takes a upper_left point, width and height and returns full covering area (as list) """
+    cover = []
+    for i in range(int(ceil(w))):
+        for j in range(int(ceil(h))):
+            cover.append((int(x)+i, int(y)+j))
+
+    return cover
 
 def is_wall(pos):
     """ returns true if a wall is at the desired location, false otherwise """
@@ -122,7 +154,7 @@ def rand_maze(callback):
         row = rows[rnum]
         for cnum in range(len(row)):
             if row[cnum] == 'O':
-                s = callback(pos=(cnum,rnum), tag='wall')
+                s = callback(pos=(cnum,rnum), tag=OBSTACLE)
                 register_cell((cnum, rnum), s)
 
 def rand_color():
@@ -269,17 +301,27 @@ def track(sprite, find_tags, pbad = 0.1) :
     if best is not None and best != (x,y):
         sprite.move((best[0] - x, best[1] - y))
 
-def player_physics(action, sprite, pos):
-    """ simple physical model that keep a player from walking into walls """
-    obj = at(pos)
-    if obj and isinstance(obj, list):
-        for x in obj:
-            if x.tag == 'wall':
-                return False
-    elif obj and obj.tag == 'wall':
-        return False
-    elif not visible(pos):
-        return False
+def player_physics(action, sprite, vector):
+    """ simple physical model that keep a player from walking into obstacles """
+    area = []
+    if ceil(sprite.width) > 1 or ceil(sprite.height) > 1:
+        area = to_area(sprite.x, sprite.y, sprite.width, sprite.height)
+    else:
+        area.append(sprite.pos)
+
+    # shift each point by the vector
+    area = list((x + vector[0], y + vector[1]) for x,y in area)
+
+    for pos in area:
+        obj = at(pos)
+        if obj and isinstance(obj, list):
+            for x in obj:
+                if x.tag == OBSTACLE:
+                    return False
+        elif obj and obj.tag == OBSTACLE:
+            return False
+        elif not visible(pos):
+            return False
     return True
 
 def fill(obj, prob = 1, collide_obj = None, collide_callback = None) :

@@ -55,7 +55,7 @@ def main():
     finally:
         WIDTH = getattr(dummy_mod, 'WIDTH', 16)
         HEIGHT = getattr(dummy_mod, 'HEIGHT', 16)
-        TITLE = getattr(dummy_mod, 'TITLE', 'PrediGame')
+        TITLE = getattr(dummy_mod, 'TITLE', 'Predigame')
         SIZE = getattr(dummy_mod, 'SIZE', 50)
         BACKGROUND = getattr(dummy_mod, 'BACKGROUND', (220, 220, 220))
         FULLSCREEN = getattr(dummy_mod, 'FULLSCREEN', False)

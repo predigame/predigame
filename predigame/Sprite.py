@@ -1,13 +1,15 @@
 import sys, random, math, pygame
 from functools import partial
-from .utils import register_keydown, register_keyup, animate, randrange_float, sign
+from .utils import register_keydown, register_keyup, animate, randrange_float, sign, to_grid, to_area, at, has_animation, get_animation
 from .Globals import Globals
+from .constants import *
+import time
 
 class Sprite():
     """
 
     The Predigame Sprite - a generic two-dimensional object that is integrated with other sprites in a larger scene. A sprite
-    can consist of a bitmap (still) image or a basic geometrical shape (circle, rectangle, ellipse). Sprites in PrediGame
+    can consist of a bitmap (still) image or a basic geometrical shape (circle, rectangle, ellipse). Sprites in Predigame
     have some fun properties - they can be clicked, collide with other sprites, even fade, spin or pulse.
 
     """
@@ -36,7 +38,8 @@ class Sprite():
         self.name = name
         self._tag = tag
         self.abortable = abortable
-
+        self.mass = 0
+        self.falling = False
 
         if tag not in Globals.instance.tags.keys():
             Globals.instance.tags[tag] = [self]
@@ -199,6 +202,8 @@ class Sprite():
             self.rotate(0)
             self.needs_rotation = False
         self._handle_collisions()
+        if self.mass > 0:
+            self._update_gravity()
 
     def _draw(self, surface):
         surface.blit(self.surface, self.rect)
@@ -310,17 +315,19 @@ class Sprite():
 
             :param precondition: an optional callback function to invoke prior to a movement. preconditions all the sprite to avoid making a certain move (e.g. to avoid a wall)
         """
+
         self.moving = True
         callback = kwargs.get('callback', None)
         precondition = kwargs.get('precondition', None)
+        action = kwargs.get('action', WALK)
 
         x_dest = int(self.x + vector[0])
         y_dest = int(self.y + vector[1])
         time = self._calc_time(vector)
-        if precondition == None or precondition('move', self, (x_dest, y_dest)):
-            animate(self, time, partial(self._complete_move, callback), abortable=self.abortable, x = x_dest, y = y_dest)
+        if precondition == None or precondition('move', self, vector):
+            animate(self, time, partial(self._complete_move, callback), abortable=self.abortable, action=action, x = x_dest, y = y_dest)
         else:
-            animate(self, time, partial(self._complete_move, callback), abortable=self.abortable, x = self.x, y = self.y)
+            animate(self, time, partial(self._complete_move, callback), abortable=self.abortable, action=action, x = self.x, y = self.y)
         return self
 
     def move_to(self, *points, **kwargs):
@@ -344,6 +351,7 @@ class Sprite():
         self.moving = True
 
         callback = partial(self._complete_move, kwargs.get('callback', None))
+        action = kwargs.get('action', None)
         times = []
 
         for index, point in enumerate(points):
@@ -357,15 +365,61 @@ class Sprite():
 
         for point in reversed(points):
             time = times.pop(-1)
-            callback = partial(animate, self, time, callback, abortable=self.abortable, x = point[0], y = point[1])
+            callback = partial(animate, self, time, callback, abortable=self.abortable, action=action, x = point[0], y = point[1])
 
         callback()
         return self
 
+    def _update_gravity(self):
+       # check for angular rolling?
+       # add bouncingness on the fall (should be based on the type of landing surface)
+       # add animation prechecks to keep feet from falling through blocks on the fall
+       # it's possible to walk across air
+
+       cover_area = to_area(self.x, self.y, self.width, self.height)
+
+       # see if any cover points are on the floor (not falling)
+       for p in cover_area:
+          if p[1] >= Globals.instance.GRID_HEIGHT - 1:
+             self.falling = False
+             return
+
+       # animations for this sprite?
+       ani = get_animation(self)
+
+       if ani is not None and ani.action == JUMP:
+          return
+
+       # see if any the next points will hit an obstacle
+       next_area = list(map(lambda p : (p[0], p[1]+1), cover_area))
+       clear = True
+       for p in next_area:
+          if p in Globals.instance.cells and self not in Globals.instance.cells[p]:
+              clear = False
+              if self.falling:
+                 self.falling = False
+                 if ani is not None:
+                    Globals.instance.animations.remove(ani)
+                    self.move_to((self.x, self.y), action=GRAVITY)
+                 print('Returning from gravity.. not sure why?')
+                 return
+
+       if clear and (ani is None or ani.action != GRAVITY):
+             print('Falling? {} --> {}'.format(self.pos, Globals.instance.GRID_HEIGHT-self.height))
+             self.falling = True
+             self.move_to((self.x, self.y+1),action=GRAVITY)
+
+
     def _continue_key(self, key, distance, **kwargs):
+        #if self.falling is False:
         p = kwargs.get('precondition', None)
         if key in Globals.instance.keys_pressed:
-            self.move(distance, callback = partial(self._continue_key, key, distance, precondition = p), precondition = p)
+           self.move(distance, callback = partial(self._continue_key, key, distance, precondition = p), precondition = p)
+
+    def _key_move(self, vector, **kwargs):
+        if self.falling is False and (self.mass == 0 or vector[1] == 0):
+           self.move(vector, **kwargs)
+
 
     def keys(self, right = 'right', left = 'left', up = 'up', down = 'down', **kwargs):
         """
@@ -397,13 +451,13 @@ class Sprite():
             register_key = register_keyup
 
         if right:
-            register_key(right, partial(self.move, (1 * distance, 0), callback = partial(self._continue_key, right, (1 * distance, 0), precondition = p), precondition = p))
+            register_key(right, partial(self._key_move, (1 * distance, 0), callback = partial(self._continue_key, right, (1 * distance, 0), precondition = p), precondition = p))
         if left:
-            register_key(left, partial(self.move, (-1 * distance, 0), callback = partial(self._continue_key, left, (-1 * distance, 0), precondition = p), precondition = p))
+            register_key(left, partial(self._key_move, (-1 * distance, 0), callback = partial(self._continue_key, left, (-1 * distance, 0), precondition = p), precondition = p))
         if up:
-            register_key(up, partial(self.move, (0, -1 * distance), callback = partial(self._continue_key, up, (0, -1 * distance), precondition = p), precondition = p))
+            register_key(up, partial(self._key_move, (0, -1 * distance), callback = partial(self._continue_key, up, (0, -1 * distance), precondition = p), precondition = p))
         if down:
-            register_key(down, partial(self.move, (0, 1 * distance), callback = partial(self._continue_key, down, (0, 1 * distance), precondition = p), precondition = p))
+            register_key(down, partial(self._key_move, (0, 1 * distance), callback = partial(self._continue_key, down, (0, 1 * distance), precondition = p), precondition = p))
 
         return self
 

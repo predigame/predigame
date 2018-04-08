@@ -6,6 +6,8 @@ class Globals:
         self.WIDTH = width
         self.HEIGHT = height
         self.GRID_SIZE = grid_size
+        self.GRID_WIDTH = width / grid_size
+        self.GRID_HEIGHT = height / grid_size
 
         self.sprites = []
         self.cells = {}
