@@ -20,7 +20,6 @@ class Actor(Sprite):
                 img = pygame.transform.scale(img, rect.size)
                 self.actions[action].append(img)
 
-        self.jump_height = 5
         self.index = 0
         self.action_iterations = 0
         self.action = IDLE
@@ -144,24 +143,28 @@ class Actor(Sprite):
                  else:
                     self.move((head[0]-self.x, head[1]-self.y), callback=partial(self.act, IDLE+'_'+self.direction, FOREVER), action=action, animation=animation)
 
-    def jump(self, height = None):
-       if height == None:
-          height = self.jump_height
+    def jump(self, height = 4, arc = [1.875, 3.875, 3.875, 1.875]):
 
        ani = get_animation(self)
        if self.falling or (ani is not None and ani.action == JUMP):
           return
 
-       lateral = 0
        if ani is not None and ani.action == WALK:
-          print('walk and jump')
+          inc = 1
           if self.direction == LEFT:
-             lateral = -2
-          else:
-             lateral = 2
+             inc = -1
+          pts = []
 
-       #self.act(JUMP + '_' + self.direction, FOREVER)
-       self.move((lateral, -height), animation=WALK + '_' + self.direction, action=JUMP)
+          for x in range(len(arc)):
+              pts.append((self.x+ inc + (x*inc), self.y - arc[x]))
+          pts.append((self.x + inc + (inc * len(arc)), self.y))
+          print('{} ==> {}'.format(self.pos, pts))
+          Globals.instance.animations.remove(ani)
+          print(ani.callback)
+          self.move_to(*pts, animation=WALK + '_' + self.direction, action=JUMP, callback=ani.callback)
+
+       else:
+          self.move((0, -height), animation=WALK + '_' + self.direction, action=JUMP)
 
     def _complete_move(self, callback = None):
         if self.health == 0:

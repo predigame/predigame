@@ -736,8 +736,9 @@ def main_loop():
             # complete any in process animations
             # TODO: there should be restrictions on
             #       on how this can be used
-            for key in globs.keys_pressed:
-                globs.keys_pressed.remove(key)
+
+            #for key in globs.keys_pressed:
+            #    globs.keys_pressed.remove(key)
 
             for animation in globs.animations:
                 animation.abort()

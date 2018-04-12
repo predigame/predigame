@@ -38,7 +38,7 @@ class Sprite():
         self.name = name
         self._tag = tag
         self.abortable = abortable
-        self.mass = 0
+        self._mass = 0
         self.falling = False
 
         if tag not in Globals.instance.tags.keys():
@@ -56,12 +56,21 @@ class Sprite():
         self.pixelate(math.ceil(value))
 
     @property
+    def mass(self):
+        return self._mass
+
+    @mass.setter
+    def mass(self, value):
+        self._mass = value
+
+    @property
     def value(self):
         return self._value
 
     @value.setter
     def value(self, value):
         self._value = value
+        return self
 
     @property
     def x(self):
@@ -376,6 +385,12 @@ class Sprite():
        # add animation prechecks to keep feet from falling through blocks on the fall
        # it's possible to walk across air
 
+       # animations for this sprite?
+       ani = get_animation(self)
+
+       if ani is not None and ani.action == JUMP:
+          return
+
        cover_area = to_area(self.x, self.y, self.width, self.height)
 
        # see if any cover points are on the floor (not falling)
@@ -383,12 +398,6 @@ class Sprite():
           if p[1] >= Globals.instance.GRID_HEIGHT - 1:
              self.falling = False
              return
-
-       # animations for this sprite?
-       ani = get_animation(self)
-
-       if ani is not None and ani.action == JUMP:
-          return
 
        # see if any the next points will hit an obstacle
        next_area = list(map(lambda p : (p[0], p[1]+1), cover_area))
@@ -411,13 +420,17 @@ class Sprite():
 
 
     def _continue_key(self, key, distance, **kwargs):
-        #if self.falling is False:
         p = kwargs.get('precondition', None)
         if key in Globals.instance.keys_pressed:
            self.move(distance, callback = partial(self._continue_key, key, distance, precondition = p), precondition = p)
 
     def _key_move(self, vector, **kwargs):
-        if self.falling is False and (self.mass == 0 or vector[1] == 0):
+        # clean this up
+        ani = get_animation(self)
+        if ani is not None and (ani.action == JUMP or ani.action == GRAVITY):
+           return
+
+        if (self.mass == 0 or vector[1] == 0):
            self.move(vector, **kwargs)
 
 
@@ -460,6 +473,7 @@ class Sprite():
             register_key(down, partial(self._key_move, (0, 1 * distance), callback = partial(self._continue_key, down, (0, 1 * distance), precondition = p), precondition = p))
 
         return self
+
 
     def follow(self):
         """
