@@ -1,6 +1,6 @@
 import sys, random, math, pygame
 from functools import partial
-from .utils import register_keydown, register_keyup, animate, randrange_float, sign, to_grid, to_area, at, has_animation, get_animation
+from .utils import register_keydown, register_keyup, animate, randrange_float, sign, to_grid, to_area, at, has_animation, get_animation, vsub
 from .Globals import Globals
 from .constants import *
 import time
@@ -21,6 +21,7 @@ class Sprite():
         self.rect = rect
         self.virt_rect = [float(self.rect.x), float(self.rect.y), float(self.rect.width), float(self.rect.height)]
         self.surface = pygame.transform.scale(self.origin_surface, rect.size)
+        self.mask = pygame.mask.from_surface(self.surface)
         self.needs_rotation = False
         self.move_speed = 5
         self.moving = False
@@ -223,7 +224,9 @@ class Sprite():
                 self.collisions.remove(collision)
                 continue
 
-            if self.rect.colliderect(collision['sprite'].rect):
+            offset = list(map(int,vsub(collision['sprite'].rect, self.rect)))
+            overlap = self.mask.overlap_area(collision['sprite'].mask,offset)
+            if overlap > 0:
                 collision['cb'](self, collision['sprite'])
                 #break # only handle one collision per frame (for now)
 

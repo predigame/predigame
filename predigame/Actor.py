@@ -13,12 +13,16 @@ class Actor(Sprite):
     def __init__(self, actions, rect, tag=None, abortable=False, name=None):
         # - scale images
         self.actions = {}
+        self.masks = {}
         for action in actions:
             self.actions[action] = []
+            self.masks[action] = []
             for img in actions[action]:
                 img = img.convert_alpha()
                 img = pygame.transform.scale(img, rect.size)
                 self.actions[action].append(img)
+                self.masks[action].append(pygame.mask.from_surface(img))
+
 
         self.index = 0
         self.action_iterations = 0
@@ -182,6 +186,7 @@ class Actor(Sprite):
         img = self.actions[self.action][self.index]
         self.surface = img
         self.origin_surface = img
+        self.mask = self.masks[self.action][self.index]
         Sprite._update(self, delta)
         if self.action_loop == FOREVER or self.action_iterations < self.action_loop:
             self.frame_count = self.frame_count + 1
