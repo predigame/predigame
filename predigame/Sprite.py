@@ -56,13 +56,9 @@ class Sprite():
         self._pixelated = value
         self.pixelate(math.ceil(value))
 
-    @property
-    def mass(self):
-        return self._mass
-
-    @mass.setter
     def mass(self, value):
         self._mass = value
+        return self
 
     @property
     def value(self):
@@ -212,7 +208,7 @@ class Sprite():
             self.rotate(0)
             self.needs_rotation = False
         self._handle_collisions()
-        if self.mass > 0:
+        if self._mass > 0:
             self._update_gravity()
 
     def _draw(self, surface):
@@ -413,11 +409,9 @@ class Sprite():
                  if ani is not None:
                     Globals.instance.animations.remove(ani)
                     self.move_to((self.x, self.y), action=GRAVITY)
-                 print('Returning from gravity.. not sure why?')
                  return
 
        if clear and (ani is None or ani.action != GRAVITY):
-             print('Falling? {} --> {}'.format(self.pos, Globals.instance.GRID_HEIGHT-self.height))
              self.falling = True
              self.move_to((self.x, self.y+1),action=GRAVITY)
 
@@ -433,7 +427,7 @@ class Sprite():
         if ani is not None and (ani.action == JUMP or ani.action == GRAVITY):
            return
 
-        if (self.mass == 0 or vector[1] == 0):
+        if (self._mass == 0 or vector[1] == 0):
            self.move(vector, **kwargs)
 
 

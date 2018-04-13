@@ -150,7 +150,7 @@ class Actor(Sprite):
     def jump(self, height = 4, arc = [1.875, 3.875, 3.875, 1.875]):
 
        ani = get_animation(self)
-       if self.falling or (ani is not None and ani.action == JUMP):
+       if self.falling or (ani is not None and (ani.action == JUMP or ani.action == GRAVITY)):
           return
 
        if ani is not None and ani.action == WALK:
@@ -162,9 +162,7 @@ class Actor(Sprite):
           for x in range(len(arc)):
               pts.append((self.x+ inc + (x*inc), self.y - arc[x]))
           pts.append((self.x + inc + (inc * len(arc)), self.y))
-          print('{} ==> {}'.format(self.pos, pts))
           Globals.instance.animations.remove(ani)
-          print(ani.callback)
           self.move_to(*pts, animation=WALK + '_' + self.direction, action=JUMP, callback=ani.callback)
 
        else:
