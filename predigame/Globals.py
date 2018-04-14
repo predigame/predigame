@@ -10,6 +10,7 @@ class Globals:
         self.GRID_HEIGHT = height / grid_size
 
         self.sprites = []
+        self.backgrounds = [] #sprites/scene things that are in the background
         self.cells = {}
         self.tags = {}
         self.animations = []

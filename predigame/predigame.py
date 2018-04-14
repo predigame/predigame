@@ -31,7 +31,6 @@ display_active = DISPLAY_MAIN
 def background(bg = None):
     """ set the background color or image """
     global _background, _background_color
-    _background = None
     if bg is None:
         from urllib.request import urlopen
         import io
@@ -51,6 +50,9 @@ def background(bg = None):
         else:
             #size background to fix screen
             _background = pygame.transform.scale(_background, (WIDTH, HEIGHT))
+    elif isinstance(bg, Sprite):
+        globs.sprites.remove(bg)
+        globs.backgrounds.append(bg)
     else :
         _background = _background_color = bg
 
@@ -593,6 +595,7 @@ def stopwatch(value=0, goal=999, pos=LOWER_LEFT, color=BLACK, prefix='Duration: 
 
 def destroyall():
     del globs.sprites[:]
+    del globs.backgrounds[:]
 
 def pause():
     pygame.event.post(pygame.event.Event(USEREVENT, action = 'pause'))
@@ -672,6 +675,9 @@ def _update_animation(animation, delta):
 
 def _update(delta):
     time = get_time()
+    for sprite in globs.backgrounds:
+        sprite._update(delta)
+
     for sprite in globs.sprites:
         sprite._update(delta)
 
@@ -708,10 +714,14 @@ def _draw(SURF):
     else:
         SURF.fill(_background_color)
 
+    for sprite in globs.backgrounds:
+        sprite._draw(SURF)
+
     globs.cells = {}
     for sprite in globs.sprites:
         register_cell(sprite.pos, sprite)
         sprite._draw(SURF)
+
 
     if show_grid:
         _draw_grid()

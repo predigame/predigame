@@ -91,6 +91,7 @@ class Actor(Sprite):
 
     def stop(self):
         self._stop = True
+        Sprite.stop(self)
 
     def move(self, vector, **kwargs):
         animation = kwargs.get('animation', WALK + '_' + self.direction)
@@ -246,6 +247,7 @@ class Actor(Sprite):
     def kill(self, delay=1.25):
         """ used to kill this actor """
         if self.health > 0:
+            self.stop()
             self.health = 0
             self.destruct(delay)
 

@@ -203,6 +203,13 @@ class Sprite():
         x, y, width, height = self.virt_rect[:]
         return (x + width/2.0)/ Globals.instance.GRID_SIZE, (y + height/2.0)/ Globals.instance.GRID_SIZE
 
+    def stop(self):
+        """ stop any running animations involving this sprite """
+        for o in Globals.instance.animations:
+            if o.obj == self:
+                Globals.instance.animations.remove(o)
+        return self
+
     def _update(self, delta):
         if self.needs_rotation:
             self.rotate(0)
