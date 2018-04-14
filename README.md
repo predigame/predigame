@@ -3,6 +3,7 @@
 
 *Pure Code. Pure Fun. Brain candy for the aspiring coder!*
 
+
 ## Overview
 Predigame is an instructional platform that teaches the basics of coding through the creation of arcade games.
 The platform was researched and developed by [Predicate Academy](http://predicate.us) and used for teaching kids ages 8-17 all the *amazingly cool things* that can be created with code. Predigame is a minimalistic platform and makes extensive use of coding abstractions to present a "low lift" interface allowing aspiring coders to familiarize themselves with *computational thinking* while
