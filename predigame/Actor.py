@@ -13,12 +13,16 @@ class Actor(Sprite):
     def __init__(self, actions, rect, tag=None, abortable=False, name=None):
         # - scale images
         self.actions = {}
+        self.masks = {}
         for action in actions:
             self.actions[action] = []
+            self.masks[action] = []
             for img in actions[action]:
                 img = img.convert_alpha()
                 img = pygame.transform.scale(img, rect.size)
                 self.actions[action].append(img)
+                self.masks[action].append(pygame.mask.from_surface(img))
+
 
         self.index = 0
         self.action_iterations = 0
@@ -87,6 +91,7 @@ class Actor(Sprite):
 
     def stop(self):
         self._stop = True
+        Sprite.stop(self)
 
     def move(self, vector, **kwargs):
         animation = kwargs.get('animation', WALK + '_' + self.direction)
@@ -146,7 +151,7 @@ class Actor(Sprite):
     def jump(self, height = 4, arc = [1.875, 3.875, 3.875, 1.875]):
 
        ani = get_animation(self)
-       if self.falling or (ani is not None and ani.action == JUMP):
+       if self.falling or (ani is not None and (ani.action == JUMP or ani.action == GRAVITY)):
           return
 
        if ani is not None and ani.action == WALK:
@@ -158,9 +163,7 @@ class Actor(Sprite):
           for x in range(len(arc)):
               pts.append((self.x+ inc + (x*inc), self.y - arc[x]))
           pts.append((self.x + inc + (inc * len(arc)), self.y))
-          print('{} ==> {}'.format(self.pos, pts))
           Globals.instance.animations.remove(ani)
-          print(ani.callback)
           self.move_to(*pts, animation=WALK + '_' + self.direction, action=JUMP, callback=ani.callback)
 
        else:
@@ -182,6 +185,7 @@ class Actor(Sprite):
         img = self.actions[self.action][self.index]
         self.surface = img
         self.origin_surface = img
+        self.mask = self.masks[self.action][self.index]
         Sprite._update(self, delta)
         if self.action_loop == FOREVER or self.action_iterations < self.action_loop:
             self.frame_count = self.frame_count + 1
@@ -243,6 +247,7 @@ class Actor(Sprite):
     def kill(self, delay=1.25):
         """ used to kill this actor """
         if self.health > 0:
+            self.stop()
             self.health = 0
             self.destruct(delay)
 

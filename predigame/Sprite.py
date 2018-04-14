@@ -1,6 +1,6 @@
 import sys, random, math, pygame
 from functools import partial
-from .utils import register_keydown, register_keyup, animate, randrange_float, sign, to_grid, to_area, at, has_animation, get_animation
+from .utils import register_keydown, register_keyup, animate, randrange_float, sign, to_grid, to_area, at, has_animation, get_animation, vsub
 from .Globals import Globals
 from .constants import *
 import time
@@ -21,6 +21,7 @@ class Sprite():
         self.rect = rect
         self.virt_rect = [float(self.rect.x), float(self.rect.y), float(self.rect.width), float(self.rect.height)]
         self.surface = pygame.transform.scale(self.origin_surface, rect.size)
+        self.mask = pygame.mask.from_surface(self.surface)
         self.needs_rotation = False
         self.move_speed = 5
         self.moving = False
@@ -55,13 +56,9 @@ class Sprite():
         self._pixelated = value
         self.pixelate(math.ceil(value))
 
-    @property
-    def mass(self):
-        return self._mass
-
-    @mass.setter
     def mass(self, value):
         self._mass = value
+        return self
 
     @property
     def value(self):
@@ -206,12 +203,19 @@ class Sprite():
         x, y, width, height = self.virt_rect[:]
         return (x + width/2.0)/ Globals.instance.GRID_SIZE, (y + height/2.0)/ Globals.instance.GRID_SIZE
 
+    def stop(self):
+        """ stop any running animations involving this sprite """
+        for o in Globals.instance.animations:
+            if o.obj == self:
+                Globals.instance.animations.remove(o)
+        return self
+
     def _update(self, delta):
         if self.needs_rotation:
             self.rotate(0)
             self.needs_rotation = False
         self._handle_collisions()
-        if self.mass > 0:
+        if self._mass > 0:
             self._update_gravity()
 
     def _draw(self, surface):
@@ -223,7 +227,9 @@ class Sprite():
                 self.collisions.remove(collision)
                 continue
 
-            if self.rect.colliderect(collision['sprite'].rect):
+            offset = list(map(int,vsub(collision['sprite'].rect, self.rect)))
+            overlap = self.mask.overlap_area(collision['sprite'].mask,offset)
+            if overlap > 0:
                 collision['cb'](self, collision['sprite'])
                 #break # only handle one collision per frame (for now)
 
@@ -410,11 +416,9 @@ class Sprite():
                  if ani is not None:
                     Globals.instance.animations.remove(ani)
                     self.move_to((self.x, self.y), action=GRAVITY)
-                 print('Returning from gravity.. not sure why?')
                  return
 
        if clear and (ani is None or ani.action != GRAVITY):
-             print('Falling? {} --> {}'.format(self.pos, Globals.instance.GRID_HEIGHT-self.height))
              self.falling = True
              self.move_to((self.x, self.y+1),action=GRAVITY)
 
@@ -430,7 +434,7 @@ class Sprite():
         if ani is not None and (ani.action == JUMP or ani.action == GRAVITY):
            return
 
-        if (self.mass == 0 or vector[1] == 0):
+        if (self._mass == 0 or vector[1] == 0):
            self.move(vector, **kwargs)
 
 

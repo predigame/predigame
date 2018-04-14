@@ -377,3 +377,12 @@ def save_state(actor, sfile):
     import json, base64
     state_file = open(sfile, 'wb')
     state_file.write(base64.b64encode(json.dumps(actor.dump_state()).encode()))
+
+def vadd(x,y):
+    return [x[0]+y[0],x[1]+y[1]]
+
+def vsub(x,y):
+    return [x[0]-y[0],x[1]-y[1]]
+
+def vdot(x,y):
+    return x[0]*y[0]+x[1]*y[1]
