@@ -151,7 +151,7 @@ class Actor(Sprite):
     def jump(self, height = 4, arc = [1.875, 3.875, 3.875, 1.875]):
 
        ani = get_animation(self)
-       if self.falling or (ani is not None and (ani.action == JUMP or ani.action == GRAVITY)):
+       if (ani is not None and (ani.action == JUMP or ani.action == GRAVITY)):
           return
 
        if ani is not None and ani.action == WALK:
@@ -167,7 +167,7 @@ class Actor(Sprite):
           self.move_to(*pts, animation=WALK + '_' + self.direction, action=JUMP, callback=ani.callback)
 
        else:
-          self.move((0, -height), animation=WALK + '_' + self.direction, action=JUMP)
+          self.move_to((self.x, self.y-height),(self.x, self.y), animation=WALK + '_' + self.direction, action=JUMP)
 
     def _complete_move(self, callback = None):
         if self.health == 0:

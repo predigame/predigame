@@ -4,6 +4,7 @@ from .utils import register_keydown, register_keyup, animate, randrange_float, s
 from .Globals import Globals
 from .constants import *
 import time
+import copy
 
 class Sprite():
     """
@@ -20,6 +21,7 @@ class Sprite():
         self.origin_surface = self.surface
         self.rect = rect
         self.virt_rect = [float(self.rect.x), float(self.rect.y), float(self.rect.width), float(self.rect.height)]
+        self.prev_rect = self.virt_rect
         self.surface = pygame.transform.scale(self.origin_surface, rect.size)
         self.mask = pygame.mask.from_surface(self.surface)
         self.needs_rotation = False
@@ -217,6 +219,7 @@ class Sprite():
         self._handle_collisions()
         if self._mass > 0:
             self._update_gravity()
+        self.prev_rect = copy.copy(self.virt_rect)
 
     def _draw(self, surface):
         surface.blit(self.surface, self.rect)
@@ -391,11 +394,22 @@ class Sprite():
        # add animation prechecks to keep feet from falling through blocks on the fall
        # it's possible to walk across air
 
+
+       direction = 1
+       moving = False
+       if self.prev_rect[1] > self.virt_rect[1]:
+          direction = -1
+          moving = True
+       elif self.prev_rect[1] < self.virt_rect[1]:
+          direction = 1
+          moving = True
+
+
        # animations for this sprite?
        ani = get_animation(self)
 
-       if ani is not None and ani.action == JUMP:
-          return
+       #if ani is not None and ani.action == JUMP:
+       #   return
 
        cover_area = to_area(self.x, self.y, self.width, self.height)
 
@@ -405,22 +419,59 @@ class Sprite():
              self.falling = False
              return
 
-       # see if any the next points will hit an obstacle
-       next_area = list(map(lambda p : (p[0], p[1]+1), cover_area))
+       # see if any the next points will hit an obstacle (coming down)
+       next_area = list(map(lambda p : (p[0], p[1]+direction), cover_area))
+       print('{} ==> {} [{}, {}]'.format(cover_area, next_area, direction, moving))
        clear = True
        for p in next_area:
-          if p in Globals.instance.cells and self not in Globals.instance.cells[p]:
-              clear = False
-              if self.falling:
-                 self.falling = False
-                 if ani is not None:
-                    Globals.instance.animations.remove(ani)
-                    self.move_to((self.x, self.y), action=GRAVITY)
-                 return
+          if p in Globals.instance.cells:
+             here = Globals.instance.cells[p]
+             if self in here and len(here) > 1:
+                 clear = False
+                 break
+             elif self not in here and len(here) > 0:
+                 clear = False
+                 break
 
-       if clear and (ani is None or ani.action != GRAVITY):
-             self.falling = True
-             self.move_to((self.x, self.y+1),action=GRAVITY)
+              #if self.falling:
+              #   self.falling = False
+              #   if ani is not None:
+              #      Globals.instance.animations.remove(ani)
+              #      self.move_to((self.x, self.y), action=GRAVITY)
+              #   return
+       #print("is clear? {}".format(clear))
+
+       #stationary and clear
+       # - fall down to bottom
+       if moving is False and clear and (ani is None or ani.action != JUMP):
+           # but am i jumping?
+           if ani is not None:
+               Globals.instance.animations.remove(ani)
+           print('a')
+           self.move_to((self.x, (Globals.instance.GRID_HEIGHT-1)-self.height), action=GRAVITY)
+           return
+
+       #falling and not clear
+       # - stop
+       if moving and direction == 1 and clear is False:
+             if ani is not None:
+                 print('b')
+                 Globals.instance.animations.remove(ani)
+                 if ani.callback is not None:
+                     ani.callback()
+             #self.move_to((self.x, self.y), action=GRAVITY)
+             return
+
+       #jumping and not clear
+       # - stop
+       if moving and direction == -1 and clear is False:
+             print('i hit something')
+             if ani is not None:
+                 print('c')
+                 Globals.instance.animations.remove(ani)
+             self.move_to((self.x, (Globals.instance.GRID_HEIGHT-1)-self.height), action=GRAVITY)
+             #self.move_to((self.x, self.y), action=GRAVITY)
+             return
 
 
     def _continue_key(self, key, distance, **kwargs):
