@@ -1,10 +1,11 @@
 import sys, random, math, pygame
 from functools import partial
-from .utils import register_keydown, register_keyup, animate, randrange_float, sign, to_grid, to_area, at, has_animation, get_animation, vsub
+from .utils import register_keydown, register_keyup, animate, randrange_float, sign, to_grid, is_wall, to_area, at, has_animation, get_animation, vsub
 from .Globals import Globals
 from .constants import *
 import time
 import copy
+from bresenham import bresenham
 
 class Sprite():
     """
@@ -213,12 +214,12 @@ class Sprite():
         return self
 
     def _update(self, delta):
+        if self._mass > 0:
+            self._update_gravity()
         if self.needs_rotation:
             self.rotate(0)
             self.needs_rotation = False
         self._handle_collisions()
-        if self._mass > 0:
-            self._update_gravity()
         self.prev_rect = copy.copy(self.virt_rect)
 
     def _draw(self, surface):
@@ -338,10 +339,30 @@ class Sprite():
         callback = kwargs.get('callback', None)
         precondition = kwargs.get('precondition', None)
         action = kwargs.get('action', WALK)
-
         x_dest = int(self.x + vector[0])
         y_dest = int(self.y + vector[1])
         time = self._calc_time(vector)
+        # add a util to check the next point where there is no conflict (bresenham)
+        #print('move ({},{}) with vector ({}, {}) to ({},{})'.format(self.x, self.y, vector[0], vector[1], x_dest, y_dest))
+        cross = list(bresenham(self.x, self.y, x_dest, y_dest))[1:]
+        #print(' -- will cross points {}'.format(cross))
+        x_dest = self.x
+        y_dest = self.y
+        for p in cross:
+           # see if any the next points will hit an obstacle (coming down)
+           next_area = to_area(p[0], p[1], self.width, self.height)
+           #print('     checking ({},{}) covering ({})'.format(p[0],p[1],next_area))
+           clear = True
+           for pn in next_area:
+              if pn in Globals.instance.cells and is_wall(pn, cells=Globals.instance.cells[pn]):
+                  clear = False
+                  break
+           if clear:
+               x_dest = p[0]
+               y_dest = p[1]
+           else:
+               break
+        #print(' -- moving to ({},{})'.format(x_dest, y_dest))
         if precondition == None or precondition('move', self, vector):
             animate(self, time, partial(self._complete_move, callback), abortable=self.abortable, action=action, x = x_dest, y = y_dest)
         else:
@@ -389,27 +410,19 @@ class Sprite():
         return self
 
     def _update_gravity(self):
-       # check for angular rolling?
        # add bouncingness on the fall (should be based on the type of landing surface)
-       # add animation prechecks to keep feet from falling through blocks on the fall
-       # it's possible to walk across air
 
-
-       direction = 1
+       direction_y = 1
        moving = False
        if self.prev_rect[1] > self.virt_rect[1]:
-          direction = -1
+          direction_y = -1
           moving = True
        elif self.prev_rect[1] < self.virt_rect[1]:
-          direction = 1
+          direction_y = 1
           moving = True
-
 
        # animations for this sprite?
        ani = get_animation(self)
-
-       #if ani is not None and ani.action == JUMP:
-       #   return
 
        cover_area = to_area(self.x, self.y, self.width, self.height)
 
@@ -420,8 +433,8 @@ class Sprite():
              return
 
        # see if any the next points will hit an obstacle (coming down)
-       next_area = list(map(lambda p : (p[0], p[1]+direction), cover_area))
-       print('{} ==> {} [{}, {}]'.format(cover_area, next_area, direction, moving))
+       next_area = list(map(lambda p : (p[0], p[1]+direction_y), cover_area))
+       #print('cover {} ==> next {}'.format(cover_area, next_area))
        clear = True
        for p in next_area:
           if p in Globals.instance.cells:
@@ -433,46 +446,35 @@ class Sprite():
                  clear = False
                  break
 
-              #if self.falling:
-              #   self.falling = False
-              #   if ani is not None:
-              #      Globals.instance.animations.remove(ani)
-              #      self.move_to((self.x, self.y), action=GRAVITY)
-              #   return
-       #print("is clear? {}".format(clear))
-
        #stationary and clear
        # - fall down to bottom
        if moving is False and clear and (ani is None or ani.action != JUMP):
-           # but am i jumping?
+           cb = None
            if ani is not None:
+               cb = ani.callback
                Globals.instance.animations.remove(ani)
-           print('a')
-           self.move_to((self.x, (Globals.instance.GRID_HEIGHT-1)-self.height), action=GRAVITY)
+           self.move_to((self.x, (Globals.instance.GRID_HEIGHT-1)-self.height), action=GRAVITY, callback=cb)
            return
 
        #falling and not clear
        # - stop
-       if moving and direction == 1 and clear is False:
-             if ani is not None:
-                 print('b')
-                 Globals.instance.animations.remove(ani)
-                 if ani.callback is not None:
-                     ani.callback()
-             #self.move_to((self.x, self.y), action=GRAVITY)
-             return
+       #if moving and direction_y == 1 and clear is False:
+       #      if ani is not None:
+       #          print('aboring {} at ({},{})'.format(ani.attributes,self.x,self.y))
+       #          Globals.instance.animations.remove(ani)
+       ##          if ani.callback is not None:
+       #              ani.callback()
+       #      return
 
        #jumping and not clear
        # - stop
-       if moving and direction == -1 and clear is False:
-             print('i hit something')
-             if ani is not None:
-                 print('c')
-                 Globals.instance.animations.remove(ani)
-             self.move_to((self.x, (Globals.instance.GRID_HEIGHT-1)-self.height), action=GRAVITY)
-             #self.move_to((self.x, self.y), action=GRAVITY)
-             return
-
+       #if moving and direction_y == -1 and clear is False:
+       #      cb = None
+       #      if ani is not None:
+       #          cb = ani.callback
+       #          Globals.instance.animations.remove(ani)
+       #      self.move_to((self.x, (Globals.instance.GRID_HEIGHT-1)-self.height), action=GRAVITY, callback=cb)
+       #      return
 
     def _continue_key(self, key, distance, **kwargs):
         p = kwargs.get('precondition', None)

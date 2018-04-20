@@ -61,6 +61,8 @@ def has_animation(obj, action=GRAVITY):
     else:
         return False
 
+
+
 def get_animation(obj):
     for o in Globals.instance.animations:
         if o.obj == obj:
@@ -96,9 +98,13 @@ def to_area(x, y, w, h):
 
     return cover
 
-def is_wall(pos):
+def is_wall(pos, cells=None):
     """ returns true if a wall is at the desired location, false otherwise """
-    atpos = at(pos)
+    atpos = None
+    if cells is None:
+        atpos = at(pos)
+    else:
+        atpos = cells
     if atpos is not None:
         if isinstance(atpos, list):
             for x in atpos:
