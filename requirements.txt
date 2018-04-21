@@ -1,3 +1,5 @@
 pygame
 pillow
 astar==0.9
+bresenham==0.2
+PyGithub==1.38
