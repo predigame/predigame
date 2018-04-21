@@ -98,7 +98,7 @@ def init(path, width = 800, height = 800, title = 'Predigame', bg = (220, 220, 2
 
     RUN_PATH = path
     WIDTH, HEIGHT = width, height
-    FPS = kwargs.get('fps', 60)
+    FPS = kwargs.get('fps', 45)
     GRID_SIZE = kwargs.get('grid', 50)
     FULLSCREEN = fullscreen
     pygame.mixer.pre_init(22050, -16, 2, 1024) # sound delay fix
