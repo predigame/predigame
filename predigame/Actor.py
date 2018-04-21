@@ -147,6 +147,7 @@ class Actor(Sprite):
                     self.move((head[0]-self.x, head[1]-self.y), callback=callback, action=action, animation=animation)
                  else:
                     self.move((head[0]-self.x, head[1]-self.y), callback=partial(self.act, IDLE+'_'+self.direction, FOREVER), action=action, animation=animation)
+        return self
 
     def jump(self, height = 4, arc = [1.875, 3.875, 3.875, 1.875]):
 

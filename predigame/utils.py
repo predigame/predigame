@@ -6,6 +6,7 @@ from .constants import *
 from astar import AStar
 from functools import partial
 from math import ceil
+from bresenham import bresenham
 
 def load_module(path, api):
     src = open(path).read()
@@ -114,6 +115,32 @@ def is_wall(pos, cells=None):
             return True
 
     return False
+
+def max_distance(posA, posB, width, height):
+    """ see if it is possible to move between two points (returns the furthest distance) """
+    x, y = posA
+    x_dest, y_dest = posB
+
+    cross = list(bresenham(x, y, x_dest, y_dest))[1:]
+    x_dest = x
+    y_dest = y
+
+    for p in cross:
+        # see if any the next points will hit an obstacle (coming down)
+        next_area = to_area(p[0], p[1], width, height)
+        clear = True
+
+        for pn in next_area:
+            if pn in Globals.instance.cells and is_wall(pn, cells=Globals.instance.cells[pn]):
+                clear = False
+                break
+        if clear:
+            x_dest = int(p[0])
+            y_dest = int(p[1])
+        else:
+            break
+
+    return x_dest, y_dest
 
 def get(name):
     if name in Globals.instance.tags:

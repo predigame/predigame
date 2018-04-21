@@ -13,6 +13,7 @@ import traceback
 import io
 from zipfile import ZipFile
 
+
 current_level = None
 globs = None
 show_grid = False

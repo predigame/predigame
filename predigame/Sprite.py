@@ -1,11 +1,11 @@
 import sys, random, math, pygame
 from functools import partial
-from .utils import register_keydown, register_keyup, animate, randrange_float, sign, to_grid, is_wall, to_area, at, has_animation, get_animation, vsub
+from .utils import register_keydown, register_keyup, animate, randrange_float, sign, to_grid, is_wall, to_area, at, has_animation, get_animation, vsub, max_distance
 from .Globals import Globals
 from .constants import *
 import time
 import copy
-from bresenham import bresenham
+
 
 class Sprite():
     """
@@ -334,7 +334,6 @@ class Sprite():
 
             :param precondition: an optional callback function to invoke prior to a movement. preconditions all the sprite to avoid making a certain move (e.g. to avoid a wall)
         """
-
         self.moving = True
         callback = kwargs.get('callback', None)
         precondition = kwargs.get('precondition', None)
@@ -342,26 +341,12 @@ class Sprite():
         x_dest = int(self.x + vector[0])
         y_dest = int(self.y + vector[1])
         time = self._calc_time(vector)
-        # add a util to check the next point where there is no conflict (bresenham)
-        #print('move ({},{}) with vector ({}, {}) to ({},{})'.format(self.x, self.y, vector[0], vector[1], x_dest, y_dest))
-        cross = list(bresenham(self.x, self.y, x_dest, y_dest))[1:]
-        #print(' -- will cross points {}'.format(cross))
-        x_dest = self.x
-        y_dest = self.y
-        for p in cross:
-           # see if any the next points will hit an obstacle (coming down)
-           next_area = to_area(p[0], p[1], self.width, self.height)
-           #print('     checking ({},{}) covering ({})'.format(p[0],p[1],next_area))
-           clear = True
-           for pn in next_area:
-              if pn in Globals.instance.cells and is_wall(pn, cells=Globals.instance.cells[pn]):
-                  clear = False
-                  break
-           if clear:
-               x_dest = p[0]
-               y_dest = p[1]
-           else:
-               break
+
+        x_dest, y_dest = max_distance(self.pos, (x_dest, y_dest), self.width, self.height)
+
+        if x_dest == self.x and y_dest == self.y:
+            self._complete_move(callback)
+            return
         #print(' -- moving to ({},{})'.format(x_dest, y_dest))
         if precondition == None or precondition('move', self, vector):
             animate(self, time, partial(self._complete_move, callback), abortable=self.abortable, action=action, x = x_dest, y = y_dest)
