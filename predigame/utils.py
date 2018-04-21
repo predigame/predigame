@@ -116,29 +116,31 @@ def is_wall(pos, cells=None):
 
     return False
 
-def max_distance(posA, posB, width, height):
+def max_distance(posA, posB, width, height, skip_up=True):
     """ see if it is possible to move between two points (returns the furthest distance) """
     x, y = posA
     x_dest, y_dest = posB
 
     cross = list(bresenham(x, y, x_dest, y_dest))[1:]
-    x_dest = x
-    y_dest = y
+    x_dest = x_prev = x
+    y_dest = y_prev = y
 
     for p in cross:
         # see if any the next points will hit an obstacle (coming down)
         next_area = to_area(p[0], p[1], width, height)
         clear = True
-
-        for pn in next_area:
-            if pn in Globals.instance.cells and is_wall(pn, cells=Globals.instance.cells[pn]):
-                clear = False
-                break
+        if p[1] > y_prev or skip_up is False:
+            for pn in next_area:
+                if pn in Globals.instance.cells and is_wall(pn, cells=Globals.instance.cells[pn]):
+                    clear = False
+                    break
         if clear:
             x_dest = int(p[0])
             y_dest = int(p[1])
         else:
             break
+        x_prev = p[0]
+        y_prev = p[1]
 
     return x_dest, y_dest
 
