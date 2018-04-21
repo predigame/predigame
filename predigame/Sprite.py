@@ -345,7 +345,7 @@ class Sprite():
         x_dest, y_dest = max_distance(self.pos, (x_dest, y_dest), self.width, self.height)
 
         if x_dest == self.x and y_dest == self.y:
-            self._complete_move(callback)
+            self._complete_move()
             return
         #print(' -- moving to ({},{})'.format(x_dest, y_dest))
         if precondition == None or precondition('move', self, vector):
