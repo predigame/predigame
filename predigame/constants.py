@@ -58,6 +58,11 @@ DIE_FRONT = 'die_front'
 DIE_LEFT = 'die_left'
 DIE_RIGHT = 'die_right'
 
+FLY_BACK = 'fly_back'
+FLY_FRONT = 'fly_front'
+FLY_LEFT = 'fly_left'
+FLY_RIGHT = 'fly_right'
+
 JUMP_BACK = 'jump_back'
 JUMP_FRONT = 'jump_front'
 JUMP_LEFT = 'jump_left'
