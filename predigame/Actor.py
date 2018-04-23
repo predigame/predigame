@@ -96,6 +96,7 @@ class Actor(Sprite):
     def move(self, vector, **kwargs):
         animation = kwargs.get('animation', WALK + '_' + self.direction)
         action = kwargs.get('action', WALK)
+        #speed = kwargs.get('speed', None)
 
         if self.health == 0:
             return
@@ -124,7 +125,7 @@ class Actor(Sprite):
         pabort = kwargs.get('pabort', -1)
         action = kwargs.get('action', WALK)
         animation = kwargs.get('animation', WALK + '_' + self.direction)
-
+        speed = kwargs.get('speed', None)
         if self._stop:
            self._stop = False
         elif len(points) == 0:
@@ -137,16 +138,16 @@ class Actor(Sprite):
               if is_wall(head):
                  self.act(IDLE, FOREVER)
               else:
-                 self.move((head[0]-self.x, head[1]-self.y), callback=partial(self.move_to, *tail, **kwargs), action=action, animation=animation)
+                 self.move((head[0]-self.x, head[1]-self.y), callback=partial(self.move_to, *tail, **kwargs), action=action, animation=animation, speed=speed)
            else:
               head = points[0]
               if is_wall(head):
                  self.act(IDLE, FOREVER)
               else:
                  if callback is not None:
-                    self.move((head[0]-self.x, head[1]-self.y), callback=callback, action=action, animation=animation)
+                    self.move((head[0]-self.x, head[1]-self.y), callback=callback, action=action, animation=animation, speed=speed)
                  else:
-                    self.move((head[0]-self.x, head[1]-self.y), callback=partial(self.act, IDLE+'_'+self.direction, FOREVER), action=action, animation=animation)
+                    self.move((head[0]-self.x, head[1]-self.y), callback=partial(self.act, IDLE+'_'+self.direction, FOREVER), action=action, animation=animation, speed=speed)
         return self
 
     def jump(self, height = 4, arc = [1.875, 3.875, 3.875, 1.875]):
@@ -165,10 +166,10 @@ class Actor(Sprite):
               pts.append((self.x+ inc + (x*inc), self.y - arc[x]))
           pts.append((self.x + inc + (inc * len(arc)), self.y))
           Globals.instance.animations.remove(ani)
-          self.move_to(*pts, animation=WALK + '_' + self.direction, action=JUMP, callback=ani.callback)
+          self.move_to(*pts, animation=WALK + '_' + self.direction, action=JUMP, speed=30, callback=ani.callback)
 
        else:
-          self.move_to((self.x, self.y-height),(self.x, self.y), animation=WALK + '_' + self.direction, action=JUMP)
+          self.move_to((self.x, self.y-height),(self.x, self.y), speed=30, animation=WALK + '_' + self.direction, action=JUMP)
 
     def _complete_move(self, callback = None):
         if self.health == 0:

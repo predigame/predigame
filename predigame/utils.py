@@ -90,12 +90,16 @@ def to_grid(screen_pos):
     else:
         return int(screen_pos / (Globals.instance.GRID_SIZE * 1.0))
 
-def to_area(x, y, w, h):
+def to_area(x, y, w, h, bottom_only=False):
     """ takes a upper_left point, width and height and returns full covering area (as list) """
     cover = []
-    for i in range(int(ceil(w))):
-        for j in range(int(ceil(h))):
-            cover.append((int(x)+i, int(y)+j))
+    if bottom_only:
+        for i in range(int(ceil(w))):
+            cover.append((int(x)+i, int(y+ceil(h)-1)))
+    else:
+        for i in range(int(ceil(w))):
+            for j in range(int(ceil(h))):
+                cover.append((int(x)+i, int(y)+j))
 
     return cover
 
@@ -124,14 +128,19 @@ def max_distance(posA, posB, width, height, skip_up=True):
     cross = list(bresenham(x, y, x_dest, y_dest))[1:]
     x_dest = x_prev = x
     y_dest = y_prev = y
+    #print('{} ==> {}'.format(posA, posB))
+    #print('cross {}'.format(cross))
+    #print('cells {}'.format(Globals.instance.cells))
 
     for p in cross:
         # see if any the next points will hit an obstacle (coming down)
-        next_area = to_area(p[0], p[1], width, height)
+        next_area = to_area(p[0], p[1], width, height, bottom_only=True)
+        #print(' next area {}'.format(next_area))
         clear = True
         if p[1] > y_prev or skip_up is False:
             for pn in next_area:
                 if pn in Globals.instance.cells and is_wall(pn, cells=Globals.instance.cells[pn]):
+                    #print(' there is something at {}'.format(pn))
                     clear = False
                     break
         if clear:
@@ -141,7 +150,7 @@ def max_distance(posA, posB, width, height, skip_up=True):
             break
         x_prev = p[0]
         y_prev = p[1]
-
+    #print('jumping to {}'.format((x_dest,y_dest)))
     return x_dest, y_dest
 
 def get(name):

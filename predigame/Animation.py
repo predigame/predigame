@@ -23,7 +23,7 @@ class Animation:
 
     def update(self, delta):
         self.time += (delta / 1000)
-        if self.action == GRAVITY or self.action == JUMP:
+        if self.action == GRAVITY:
            #print('adding gravity {} from {} {}'.format(self.acceleration * self.obj.mass, self.acceleration, self.obj.mass))
            self.time += self.acceleration * self.obj._mass
         n = self.time / self.duration
