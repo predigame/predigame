@@ -19,7 +19,7 @@ class Animation:
         self.finished = False
         self.abortable = abortable
         self.action = action
-        self.acceleration = 0.01
+        self.acceleration = 0.000
 
     def update(self, delta):
         self.time += (delta / 1000)

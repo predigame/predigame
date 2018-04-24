@@ -280,14 +280,17 @@ class Sprite():
                 self.event_pos = (1.0*pos[0])/Globals.instance.GRID_SIZE, (1.0*pos[1])/Globals.instance.GRID_SIZE
                 click['cb'](self)
 
-    def _calc_time(self, vector, position = None):
+    def _calc_time(self, vector, position = None,speed = None):
         if not position:
             position = self.virt_rect[0:2]
+
+        if not speed:
+            speed = self.move_speed
         cur_x, cur_y = position
         new_x = cur_x + vector[0] * Globals.instance.GRID_SIZE
         new_y = cur_y + vector[1] * Globals.instance.GRID_SIZE
         distance = math.sqrt((new_x - cur_x)**2 + (new_y - cur_y)**2)
-        time = (abs(distance) / self.move_speed) / 60.0
+        time = (abs(distance) / speed) / 60.0
         return time
 
     def _complete_move(self, callback = None):
@@ -338,9 +341,10 @@ class Sprite():
         callback = kwargs.get('callback', None)
         precondition = kwargs.get('precondition', None)
         action = kwargs.get('action', WALK)
+        speed = kwargs.get('speed', None)
         x_dest = int(self.x + vector[0])
         y_dest = int(self.y + vector[1])
-        time = self._calc_time(vector)
+        time = self._calc_time(vector, speed=speed)
 
         x_dest, y_dest = max_distance(self.pos, (x_dest, y_dest), self.width, self.height)
 
@@ -406,16 +410,19 @@ class Sprite():
           direction_y = 1
           moving = True
 
+       if moving:
+          return
+
        # animations for this sprite?
        ani = get_animation(self)
 
-       cover_area = to_area(self.x, self.y, self.width, self.height)
+       cover_area = to_area(self.x, self.y, self.width, self.height, bottom_only=True)
 
        # see if any cover points are on the floor (not falling)
-       for p in cover_area:
-          if p[1] >= Globals.instance.GRID_HEIGHT - 1:
-             self.falling = False
-             return
+       #for p in cover_area:
+       #   if p[1] >= Globals.instance.GRID_HEIGHT - 1:
+       #      self.falling = False
+       #      return
 
        # see if any the next points will hit an obstacle (coming down)
        next_area = list(map(lambda p : (p[0], p[1]+direction_y), cover_area))
@@ -438,7 +445,7 @@ class Sprite():
            if ani is not None:
                cb = ani.callback
                Globals.instance.animations.remove(ani)
-           self.move_to((self.x, (Globals.instance.GRID_HEIGHT-1)-self.height), action=GRAVITY, callback=cb)
+           self.move_to((self.x, Globals.instance.GRID_HEIGHT+5), action=GRAVITY, speed=30, callback=cb)
            return
 
        #falling and not clear

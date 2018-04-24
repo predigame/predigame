@@ -219,7 +219,7 @@ def level(_level):
     Globals.instance = globs
     current_level.setup()
 
-def image(name = None, pos = None, center = None, size = 1, tag = ''):
+def image(name = None, pos = None, center = None, size = 1, tag = '', order=FRONT):
     if not name:
         if os.path.isdir('images/'):
             imgs = []
@@ -257,7 +257,10 @@ def image(name = None, pos = None, center = None, size = 1, tag = ''):
         pos = rand_pos(size - 1, size - 1)
 
     img = _create_image(name, pos, center, size, tag)
-    globs.sprites.append(img)
+    if order == FRONT:
+       globs.sprites.append(img)
+    else:
+       globs.sprites.insert(0, img)
     if center:
         register_cell(center, img)
     else:
