@@ -348,9 +348,9 @@ class Sprite():
 
         x_dest, y_dest = max_distance(self.pos, (x_dest, y_dest), self.width, self.height)
 
-        if x_dest == self.x and y_dest == self.y:
-            self._complete_move()
-            return
+        #if x_dest == self.x and y_dest == self.y:
+        #    self._complete_move()
+        #    return
         #print(' -- moving to ({},{})'.format(x_dest, y_dest))
         if precondition == None or precondition('move', self, vector):
             animate(self, time, partial(self._complete_move, callback), abortable=self.abortable, action=action, x = x_dest, y = y_dest)
@@ -475,6 +475,7 @@ class Sprite():
 
     def _key_move(self, vector, **kwargs):
         # clean this up
+
         ani = get_animation(self)
         if ani is not None and (ani.action == JUMP or ani.action == GRAVITY):
            return
