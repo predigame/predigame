@@ -40,6 +40,7 @@ class Actor(Sprite):
         self._wealth = 500.0
         self._energy = 100.0
         self._inventory = None
+        self.attributes = {}
 
         if tag is not None and tag in Globals.cache:
             self._inventory = Globals.cache[tag]
@@ -90,8 +91,9 @@ class Actor(Sprite):
         self._defend = callback
 
     def stop(self):
-        self._stop = True
         Sprite.stop(self)
+        self.act(IDLE, FOREVER)
+        self._stop = True
 
     def move(self, vector, **kwargs):
         animation = kwargs.get('animation', WALK + '_' + self.direction)

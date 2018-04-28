@@ -7,6 +7,7 @@ from astar import AStar
 from functools import partial
 from math import ceil
 from bresenham import bresenham
+import copy
 
 def load_module(path, api):
     src = open(path).read()
@@ -155,7 +156,7 @@ def max_distance(posA, posB, width, height, skip_up=True):
 
 def get(name):
     if name in Globals.instance.tags:
-        return Globals.instance.tags[name]
+        return copy.copy(Globals.instance.tags[name])
     else:
         return []
 

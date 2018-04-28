@@ -758,6 +758,7 @@ class Sprite():
         """
         if self in Globals.instance.sprites:
            Globals.instance.sprites.remove(self)
+        if self in Globals.instance.tags[self._tag]:
            Globals.instance.tags[self._tag].remove(self)
         return self
 
