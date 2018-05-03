@@ -121,6 +121,14 @@ def is_wall(pos, cells=None):
 
     return False
 
+def has_obstacle(lst):
+    """ check to see if this list has a sprite that is an obstacle """
+    for x in lst:
+        if x.tag is not None and x.tag == OBSTACLE:
+            return True
+    else:
+        return False
+
 def max_distance(posA, posB, width, height, skip_up=True):
     """ see if it is possible to move between two points (returns the furthest distance) """
     x, y = posA

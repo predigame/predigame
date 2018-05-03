@@ -266,7 +266,7 @@ def image(name = None, pos = None, center = None, size = 1, tag = '', order=FRON
     else:
         register_cell(pos, img)
 
-    return globs.sprites[-1]
+    return img
 
 def actor(name = None, pos = None, center = None, size = 1, abortable = False, tag = ''):
     if not name:
@@ -309,7 +309,7 @@ def actor(name = None, pos = None, center = None, size = 1, abortable = False, t
         register_cell(center, img)
     else:
         register_cell(pos, img)
-    return globs.sprites[-1]
+    return img
 
 def maze(name=None, callback=None):
 
@@ -355,7 +355,7 @@ def shape(shape = None, color = None, pos = None, size = (1, 1), tag = '', **kwa
 
     globs.sprites.append(shape)
     register_cell(pos, shape)
-    return globs.sprites[-1]
+    return shape
 
 def text(string, color = None, pos = None, size = 1, tag = ''):
     """

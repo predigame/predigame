@@ -1,6 +1,6 @@
 import sys, random, math, pygame
 from functools import partial
-from .utils import register_keydown, register_keyup, animate, randrange_float, sign, to_grid, is_wall, to_area, at, has_animation, get_animation, vsub, max_distance
+from .utils import register_keydown, register_keyup, animate, randrange_float, sign, to_grid, is_wall, to_area, at, has_animation, get_animation, vsub, max_distance, has_obstacle
 from .Globals import Globals
 from .constants import *
 import time
@@ -71,6 +71,8 @@ class Sprite():
     def value(self, value):
         self._value = value
         return self
+
+
 
     @property
     def x(self):
@@ -200,6 +202,16 @@ class Sprite():
             :return: the tag of the sprite (can be None if no tag provided)
         """
         return self._tag
+
+    @tag.setter
+    def tag(self, value):
+        """
+            sprites can be "tagged" with extra information. for example,
+            many zombie sprites can all have the singular tag "zombie".
+            (can be None if no tag provided)
+        """
+        self._tag = value
+
 
     @property
     def center(self):
@@ -431,10 +443,7 @@ class Sprite():
        for p in next_area:
           if p in Globals.instance.cells:
              here = Globals.instance.cells[p]
-             if self in here and len(here) > 1:
-                 clear = False
-                 break
-             elif self not in here and len(here) > 0:
+             if has_obstacle(here):
                  clear = False
                  break
 
