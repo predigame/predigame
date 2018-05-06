@@ -476,6 +476,15 @@ def reset_score(**kwargs):
     except:
         return
 
+def get_score(pos=UPPER_LEFT):
+    """ returns the score value in the corresponding positional score box """
+    global score_dict
+    try:
+        scoreboard = score_dict[pos]
+        return scoreboard['value']
+    except:
+        return 0
+
 def score(value = 0, **kwargs):
     """
         Predigame scoring functions. Any game may have four separate
