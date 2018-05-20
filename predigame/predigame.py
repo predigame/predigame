@@ -604,7 +604,7 @@ def stopwatch(value=0, goal=999, pos=LOWER_LEFT, color=BLACK, prefix='Duration: 
            gameover(0.5)
         callback = __gameover__
     score(pos=pos, color=color, value=value, method=TIMER,
-          step=1, goal=goal, prefix=prefix)
+          step=1, goal=goal, prefix=prefix, callback=callback)
 
 def destroyall():
     del globs.sprites[:]
