@@ -617,15 +617,19 @@ def resume():
     global update_game
     update_game = True
 
-def gameover(delay=0.5):
+def gameover(delay=0.5, exit=None):
     """
         end the current game
 
         :param delay: the amount of time to wait before ending
+
+        :param exit: if set the game will end with the provided exit code
     """
     def _gameover():
         global game_over
         game_over = True
+        if exit is not None:
+            sys.exit(exit)
     callback(_gameover, delay)
 
 def garbagecollect():
