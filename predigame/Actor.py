@@ -117,6 +117,8 @@ class Actor(Sprite):
         if direction is not None:
             if direction != self.direction:
                 self.index = 0
+                if action == WALK:
+                   animation = WALK + '_' + direction
             self.direction = direction
 
         self.act(animation, FOREVER)
