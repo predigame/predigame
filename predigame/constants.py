@@ -1,3 +1,6 @@
+#collisions (can be pixel or rect)
+PIXEL = 'pixel'
+
 # shapes
 RECT = 'rect' #:
 SQUARE = 'rect'

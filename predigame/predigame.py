@@ -93,14 +93,15 @@ def _display_swap(name) :
         displays[name][1].setup()
 
 
-def init(path, width = 800, height = 800, title = 'Predigame', bg = (220, 220, 220), fullscreen = False, **kwargs):
-    global globs, RUN_PATH, WIDTH, HEIGHT, FPS, GRID_SIZE, SURF, FULLSCREEN, clock, start_time, sounds
+def init(path, width = 800, height = 800, title = 'Predigame', bg = (220, 220, 220), fullscreen = False, collisions = PIXEL, **kwargs):
+    global globs, RUN_PATH, WIDTH, HEIGHT, FPS, GRID_SIZE, SURF, FULLSCREEN, COLLISIONS, clock, start_time, sounds
 
     RUN_PATH = path
     WIDTH, HEIGHT = width, height
     FPS = kwargs.get('fps', 45)
     GRID_SIZE = kwargs.get('grid', 50)
     FULLSCREEN = fullscreen
+    COLLISIONS = collisions
     pygame.mixer.pre_init(22050, -16, 2, 1024) # sound delay fix
     pygame.init()
     pygame.display.set_caption(title)
@@ -109,7 +110,7 @@ def init(path, width = 800, height = 800, title = 'Predigame', bg = (220, 220, 2
 
     background(bg)
 
-    globs = Globals(WIDTH, HEIGHT, GRID_SIZE)
+    globs = Globals(WIDTH, HEIGHT, GRID_SIZE, COLLISIONS)
     Globals.instance = globs
 
 
@@ -215,7 +216,7 @@ def level(_level):
         sys.exit('Levels must be subclases of the Level class --> ' + str(_level))
     global current_level, globs
     current_level = _level
-    globs = Globals(WIDTH, HEIGHT, GRID_SIZE)
+    globs = Globals(WIDTH, HEIGHT, GRID_SIZE, COLLISIONS)
     Globals.instance = globs
     current_level.setup()
 

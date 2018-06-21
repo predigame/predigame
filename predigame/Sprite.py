@@ -243,10 +243,14 @@ class Sprite():
                 self.collisions.remove(collision)
                 continue
 
-            offset = list(map(int,vsub(collision['sprite'].rect, self.rect)))
-            overlap = self.mask.overlap_area(collision['sprite'].mask,offset)
-            if overlap > 0:
-                collision['cb'](self, collision['sprite'])
+            if Globals.instance.COLLISIONS == PIXEL:
+                offset = list(map(int,vsub(collision['sprite'].rect, self.rect)))
+                overlap = self.mask.overlap_area(collision['sprite'].mask,offset)
+                if overlap > 0:
+                    collision['cb'](self, collision['sprite'])
+            else:
+                if self.rect.colliderect(collision['sprite'].rect):
+                    collision['cb'](self, collision['sprite'])
                 #break # only handle one collision per frame (for now)
 
     def _update_float(self, distance, time):
