@@ -93,7 +93,7 @@ def _display_swap(name) :
         displays[name][1].setup()
 
 
-def init(path, width = 800, height = 800, title = 'Predigame', bg = (220, 220, 220), fullscreen = False, collisions = PIXEL, **kwargs):
+def init(path, width = 800, height = 800, title = 'Predigame', bg = (220, 220, 220), fullscreen = False, collisions = True, **kwargs):
     global globs, RUN_PATH, WIDTH, HEIGHT, FPS, GRID_SIZE, SURF, FULLSCREEN, COLLISIONS, clock, start_time, sounds
 
     RUN_PATH = path
