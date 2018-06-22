@@ -59,7 +59,7 @@ def main():
         SIZE = getattr(dummy_mod, 'SIZE', 50)
         BACKGROUND = getattr(dummy_mod, 'BACKGROUND', (220, 220, 220))
         FULLSCREEN = getattr(dummy_mod, 'FULLSCREEN', False)
-        COLLISIONS = getattr(dummy_mod, 'COLLISIONS', PIXEL)
+        COLLISIONS = getattr(dummy_mod, 'PIXEL_COLLISIONS', True)
 
     predigame.init(path, WIDTH * SIZE, HEIGHT * SIZE, TITLE, grid = SIZE, bg = BACKGROUND, fullscreen = FULLSCREEN, collisions = COLLISIONS)
 

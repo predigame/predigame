@@ -8,7 +8,7 @@ class Globals:
         self.GRID_SIZE = grid_size
         self.GRID_WIDTH = width / grid_size
         self.GRID_HEIGHT = height / grid_size
-        self.COLLISIONS = collisions
+        self.PIXEL_COLLISIONS = collisions
 
         self.sprites = []
         self.backgrounds = [] #sprites/scene things that are in the background

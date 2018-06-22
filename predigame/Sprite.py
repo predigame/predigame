@@ -243,7 +243,7 @@ class Sprite():
                 self.collisions.remove(collision)
                 continue
 
-            if Globals.instance.COLLISIONS == PIXEL:
+            if Globals.instance.PIXEL_COLLISIONS:
                 offset = list(map(int,vsub(collision['sprite'].rect, self.rect)))
                 overlap = self.mask.overlap_area(collision['sprite'].mask,offset)
                 if overlap > 0:
