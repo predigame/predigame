@@ -175,7 +175,7 @@ def _create_rectangle(color, pos, size, outline, tag):
     surface.set_colorkey(_background_color)
     pygame.draw.rect(surface, color, (0, 0, rect.width, rect.height), outline)
 
-    return Sprite(surface, rect, tag)
+    return Sprite(surface, rect, tag, name=color)
 
 def _create_circle(color, pos, size, outline, tag):
     rect = pygame.Rect(pos[0] * globs.GRID_SIZE, pos[1] * globs.GRID_SIZE, size * globs.GRID_SIZE, size * globs.GRID_SIZE)
@@ -184,7 +184,7 @@ def _create_circle(color, pos, size, outline, tag):
     surface.set_colorkey(_background_color)
     pygame.draw.circle(surface, color, (rect.width // 2, rect.height // 2), rect.width // 2, outline)
 
-    return Sprite(surface, rect, tag)
+    return Sprite(surface, rect, tag, name=color)
 
 def _create_ellipse(color, pos, size, outline, tag):
     rect = pygame.Rect(pos[0] * globs.GRID_SIZE, pos[1] * globs.GRID_SIZE, size[0] * globs.GRID_SIZE, size[1] * globs.GRID_SIZE)
@@ -193,7 +193,7 @@ def _create_ellipse(color, pos, size, outline, tag):
     surface.set_colorkey(_background_color)
     pygame.draw.ellipse(surface, color, (0, 0, rect.width, rect.height), outline)
 
-    return Sprite(surface, rect, tag)
+    return Sprite(surface, rect, tag, name=color)
 
 def _check_image_size(ifile):
     """ make sure we don't load humongo images """
