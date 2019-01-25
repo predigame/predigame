@@ -41,16 +41,20 @@ def background(bg = None):
         return
 
     if isinstance(bg, str):
-        for ext in ['png', 'jpg', 'gif']:
-            fname = 'backgrounds/' + bg + '.' + ext
-            if os.path.isfile(fname):
-                _background = pygame.image.load(fname).convert()
+        if not os.path.isdir('backgrounds'):
+            sys.exit('ERROR: background images need to be stored in the \'backgrounds\' directory')
+            return
+        files = os.listdir('backgrounds')
+        for file in files:
+            nfile = '%s' % file
+            if nfile.lower().startswith(bg.lower()):
+                _background = pygame.image.load('backgrounds/' + file).convert()
                 break
-        if _background is None:
-            sys.exit('Background image doesn\'t exist. File must be saved in backgounds directory: ' + bg)
         else:
-            #size background to fix screen
-            _background = pygame.transform.scale(_background, (WIDTH, HEIGHT))
+            sys.exit('ERROR: background image doesn\'t exist. File must be saved in \'backgrounds\' directory: ' + bg)
+
+        #size background to fix screen
+        _background = pygame.transform.scale(_background, (WIDTH, HEIGHT))
     elif isinstance(bg, Sprite):
         globs.sprites.remove(bg)
         globs.backgrounds.append(bg)
