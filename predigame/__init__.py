@@ -21,7 +21,9 @@ def bootstrap():
         print('List Available Game Downloads:')
         print('   pred list\n')
         print('Download a Game:')
-        print('   pred pull some_game\n')
+        print('   pred pull some_game')
+        print('   pred fetch some_game\n')
+
         sys.exit()
     if sys.argv[1] == 'new':
         new_game()
@@ -29,6 +31,8 @@ def bootstrap():
         get_games()
     elif sys.argv[1] == 'pull':
         pull_game()
+    elif sys.argv[1] == 'fetch':
+        fetch_game()
     else:
         main()
 
@@ -103,6 +107,36 @@ def pull_game():
     except:
         print('Unable to pull game {}. Does it exist?'.format(game))
         traceback.print_exc()
+
+def fetch_game():
+    """
+
+    Similar to pull game but doesn't use the Github API and avoids stumbling into SSL verification issues.
+
+    """
+    if len(sys.argv) != 3:
+        print('Usage: pred fetch <game>')
+        sys.exit()
+    game = sys.argv[2]
+
+    if os.path.exists(game):
+        prompt = input('{} already exists. Overwrite? (Y or N): '.format(game))
+        if prompt.upper() == 'Y':
+            shutil.rmtree(game)
+        else:
+            sys.exit()
+
+    url = 'http://predigame.io/games/' + game + '.zip'
+    try:
+        with urllib.request.urlopen(url) as response:
+            data = response.read()
+            with ZipFile(BytesIO(data)) as dnld:
+                dnld.extractall()
+            print('Download Complete!')
+    except:
+        print('Unable to fetch game {} from {}. Does it exist?'.format(game, url))
+        traceback.print_exc()
+
 
 def get_games():
     g = Github()

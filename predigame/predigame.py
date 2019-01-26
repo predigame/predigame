@@ -48,7 +48,7 @@ def background(bg = None):
         for file in files:
             nfile = '%s' % file
             if nfile.lower().startswith(bg.lower()):
-                _background = pygame.image.load('backgrounds/' + file).convert()
+                _background = pygame.image.load(os.path.join('backgrounds', file)).convert()
                 break
         else:
             sys.exit('ERROR: background image doesn\'t exist. File must be saved in \'backgrounds\' directory: ' + bg)
@@ -240,9 +240,11 @@ def image(name = None, pos = None, center = None, size = 1, tag = '', order=FRON
             name = '__error__'
 
     if not name in images:
+        cname = '%s' % name
         if os.path.isdir('images/'):
             for img in os.listdir('images/'):
-                if os.path.splitext(img)[0] == name:
+                cimg = '%s' % img
+                if cimg.lower().startswith(cname) :
                     try:
                         ifile = os.path.join('images', img)
                         _check_image_size(ifile)
