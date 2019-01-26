@@ -277,7 +277,9 @@ def image(name = None, pos = None, center = None, size = 1, tag = '', order=FRON
 
 def actor(name = None, pos = None, center = None, size = 1, abortable = False, tag = ''):
     if not name:
-        sys.exit('Actor name is missing!')
+        sys.exit('ERROR: Actor name is missing!')
+    if not os.path.isdir('actors'):
+        sys.exit('ERROR:  \'actors\' directory is missing')
 
     loaded = False
     states = {}
@@ -286,23 +288,30 @@ def actor(name = None, pos = None, center = None, size = 1, abortable = False, t
         loaded = True
         states = actors[name]
     else:
-        pga_file = 'actors/' + name + '.pga'
-        try:
-            with ZipFile(pga_file) as pga:
-                lst = pga.namelist()
-                for f in lst:
-                    if f.endswith('.png'):
-                        state = f.split('/')[0]
-                        if not state in states:
-                            states[state] = []
-                        with pga.open(f) as afile:
-                            states[state].append(pygame.image.load(io.BytesIO(afile.read())))
-                            loaded = True
-        except:
-            traceback.print_exc(file=sys.stdout)
-            sys.exit('Unable to find or load actor ' + str(name) + '. actors/' + str(name) + '.pga. may be bad!')
-
-        actors[name] = states
+        files = os.listdir('actors')
+        cname = '%s' % name
+        for file in files:
+            cfile = '%s' % file
+            if cfile.lower().startswith(cname.lower()):
+                pga_file = os.path.join('actors', file)
+                try:
+                    with ZipFile(pga_file) as pga:
+                        lst = pga.namelist()
+                        for f in lst:
+                            if f.endswith('.png'):
+                                state = f.split('/')[0]
+                                if not state in states:
+                                    states[state] = []
+                                with pga.open(f) as afile:
+                                    states[state].append(pygame.image.load(io.BytesIO(afile.read())))
+                                    loaded = True
+                    actors[name] = states
+                    break
+                except:
+                    traceback.print_exc(file=sys.stdout)
+                    sys.exit('Unable to find or load actor ' + str(name) + '. actors/' + str(name) + '.pga. may be bad!')
+        else:
+            sys.exit('ERROR: actor {} does not exist.'.format(name))
 
     if not loaded:
         sys.exit('Unable to find or load actor ' + str(name) + '. Does actors/' + str(name) + '.pga exist?')
