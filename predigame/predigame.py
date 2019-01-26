@@ -244,7 +244,7 @@ def image(name = None, pos = None, center = None, size = 1, tag = '', order=FRON
         if os.path.isdir('images/'):
             for img in os.listdir('images/'):
                 cimg = '%s' % img
-                if cimg.lower().startswith(cname) :
+                if cimg.lower().startswith(cname.lower()) :
                     try:
                         ifile = os.path.join('images', img)
                         _check_image_size(ifile)
