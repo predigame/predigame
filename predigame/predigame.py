@@ -46,7 +46,7 @@ def background(bg = None):
             return
         files = os.listdir('backgrounds')
         for file in files:
-            nfile = '%s' % file
+            nfile = '%s.' % file
             if nfile.lower().startswith(bg.lower()):
                 _background = pygame.image.load(os.path.join('backgrounds', file)).convert()
                 break
@@ -240,7 +240,7 @@ def image(name = None, pos = None, center = None, size = 1, tag = '', order=FRON
             name = '__error__'
 
     if not name in images:
-        cname = '%s' % name
+        cname = '%s.' % name
         if os.path.isdir('images/'):
             for img in os.listdir('images/'):
                 cimg = '%s' % img
@@ -289,7 +289,7 @@ def actor(name = None, pos = None, center = None, size = 1, abortable = False, t
         states = actors[name]
     else:
         files = os.listdir('actors')
-        cname = '%s' % name
+        cname = '%s.' % name
         for file in files:
             cfile = '%s' % file
             if cfile.lower().startswith(cname.lower()):
