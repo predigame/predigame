@@ -28,6 +28,16 @@ def import_plugin(plugin_file):
     exec(code, mod.__dict__)
     return mod
 
+def import_plugins(prefix = None):
+    """ ones one or more plugins in a given path or with given prefix """
+    plugins = []
+    files = os.listdir()
+    for f in files:
+       if prefix is None or f.startswith(prefix):
+          plugins.append(import_plugin(f))
+    return plugins
+
+
 def register_cell(pos, s):
     """ helper function that builds the index of all sprites in a given cell """
     area = to_area(s.x, s.y, s.width, s.height)
