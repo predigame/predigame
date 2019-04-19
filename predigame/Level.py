@@ -2,6 +2,7 @@
 from copy import deepcopy
 from .Globals import Globals
 from .utils import import_plugins
+import sys
 
 class Level:
 	def __init__(self):
@@ -26,20 +27,29 @@ def load_levels():
 
 	   a variable `LEVEL` that numbers each game levels
 
-	   a function `completed` that indicates of the objective of the level has been completed
+	   a function `completed` that indicates if the objective of the level has been completed
 
 	   a function  `setup` that builds the scene and starts game play
 
     """
     levels = import_plugins('level')
 
-    #TODO validate Levels
+    for l in levels:
+       if 'LEVEL' not in l.__dict__:
+          sys.exit('ERROR: Level file {} is missing the variable LEVEL'.format(l.__dict__['FILE']))
+
+       if 'setup' not in l.__dict__:
+          sys.exit('ERROR: Level file {} is missing the function setup'.format(l.__dict__['FILE']))
+
+       if 'completed' not in l.__dict__:
+          sys.exit('ERROR: Level file {} is missing the function completed'.format(l.__dict__['FILE']))
+
+
     levels.sort(key=lambda x: x.LEVEL, reverse=False)
 
     first_level = None
     prev_level = None
     for l in levels:
-        print(l)
         next_level = Level()
         next_level.setup = l.setup
         next_level.completed = l.completed
@@ -53,5 +63,5 @@ def load_levels():
             prev_level.next = def_next
 
         prev_level = next_level
-        print(l.LEVEL)
+
     return first_level

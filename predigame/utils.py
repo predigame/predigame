@@ -26,6 +26,7 @@ def import_plugin(plugin_file):
     from . import api
     code, mod = load_module(plugin_file, api)
     exec(code, mod.__dict__)
+    mod.__dict__['FILE'] = plugin_file
     return mod
 
 def import_plugins(prefix = None):
