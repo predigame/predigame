@@ -33,7 +33,7 @@ def load_levels():
 
     """
     levels = import_plugins('level')
-
+    print('Found and loaded {} levels'.format(len(levels)))
     for l in levels:
        if 'LEVEL' not in l.__dict__:
           sys.exit('ERROR: Level file {} is missing the variable LEVEL'.format(l.__dict__['FILE']))
@@ -43,7 +43,7 @@ def load_levels():
 
        if 'completed' not in l.__dict__:
           sys.exit('ERROR: Level file {} is missing the function completed'.format(l.__dict__['FILE']))
-
+    print('All levels verified for completeness')
 
     levels.sort(key=lambda x: x.LEVEL, reverse=False)
 
@@ -55,7 +55,7 @@ def load_levels():
         next_level.completed = l.completed
 
         if first_level is None:
-            first_level = prev_level
+            first_level = next_level
 
         if prev_level is not None:
             def def_next():
@@ -63,5 +63,5 @@ def load_levels():
             prev_level.next = def_next
 
         prev_level = next_level
-
+    print('Returning {} validated levels.'.format(len(levels)))
     return first_level
