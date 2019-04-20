@@ -29,6 +29,10 @@ def import_plugin(plugin_file):
     mod.__dict__['FILE'] = plugin_file
     return mod
 
+def import_file(plugin_file):
+    """ same as `import_plugin` """
+    return import_plugin(plugin_file)
+
 def import_plugins(prefix = None):
     """ ones one or more plugins in a given path or with given prefix """
     plugins = []

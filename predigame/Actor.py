@@ -223,7 +223,7 @@ class Actor(Sprite):
     # TODO: this needs to be merged with act
     def actit(self, action, loop=FOREVER):
         if not action in self.actions:
-            print('Unsupported action ' + str(action) + '. Going to IDLE')
+            #print('Unsupported action ' + str(action) + '. Going to IDLE')
             self.act(IDLE, loop)
             return self
             #print('Unsupported action ' + str(action) + '. Valid options are:')
