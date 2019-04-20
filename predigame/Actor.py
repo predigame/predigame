@@ -352,3 +352,7 @@ class Actor(Sprite):
             self._energy = state['energy']
         if 'inventory' in state:
             self._inventory.load_state(state['inventory'])
+
+def actors():
+   """ return a list of all loaded actors """
+   return [x for x in Globals.instance.sprites if isinstance(x, Actor)]
