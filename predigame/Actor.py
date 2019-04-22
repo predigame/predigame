@@ -356,3 +356,7 @@ class Actor(Sprite):
 def actors():
    """ return a list of all loaded actors """
    return [x for x in Globals.instance.sprites if isinstance(x, Actor)]
+
+def is_actor(x):
+   """ returns True if parameter is an actor """
+   return isinstance(x, Actor)

@@ -34,6 +34,7 @@ class Sprite():
         self.sprite_scale_y = self.height
         self.rotate_angle = 0
         self.collisions = []
+        self.register_collisions = None
         self.clicks = []
         self.lifespan = -1
         self._pixelated = 0
@@ -49,6 +50,10 @@ class Sprite():
             Globals.instance.tags[tag] = [self]
         else:
             Globals.instance.tags[tag].append(self)
+
+        for rc in Globals.instance.register_collisions:
+            if rc.register_collisions[0](self):
+                rc.collides(self, rc.register_collisions[1])
 
     @property
     def pixelated(self):
@@ -576,17 +581,22 @@ class Sprite():
 
         return self
 
+
     def collides(self, sprites, callback):
         """
             register a callback function for when this sprite collides with another sprite. collision checks will occur as part of each update invocation.
 
-            :param sprites: one (single object) or more (a list) of sprites to check for collisions.
+            :param sprites: one (single object) or more (a list) of sprites to check for collisions. can be a function to evaluate and add future sprites for addition
 
             :param callback: the callback function to invoke when a collision is detected.
 
             :todo: confirm that collides are bi-directional events.
 
         """
+        if callable(sprites):
+            self.register_collisions = (sprites, callback)
+            Globals.instance.register_collisions.append(self)
+
         if not isinstance(sprites, list):
             sprites = [sprites]
 
@@ -773,6 +783,8 @@ class Sprite():
            Globals.instance.sprites.remove(self)
         if self in Globals.instance.tags[self._tag]:
            Globals.instance.tags[self._tag].remove(self)
+        if self in Globals.instance.register_collisions:
+           Globals.instance.register_collisions.remove(self)
         return self
 
     def wander(self, callback, time = 1):

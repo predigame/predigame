@@ -21,3 +21,4 @@ class Globals:
         }
         self.keys_pressed = []
         self.mouse_motion = []
+        self.register_collisions = []

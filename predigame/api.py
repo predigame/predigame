@@ -13,6 +13,6 @@ from .utils import rand_pos, rand_arc, distance, visible, sprites, graze, track,
 from .Thing import *
 from .Inventory import Inventory
 from .Level import Level, load_levels
-from .Actor import Actor, actors
+from .Actor import Actor, actors, is_actor
 from .Sprite import Sprite
 from .Statistics import Statistics

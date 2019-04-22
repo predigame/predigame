@@ -42,7 +42,6 @@ def import_plugins(prefix = None):
           plugins.append(import_plugin(f))
     return plugins
 
-
 def register_cell(pos, s):
     """ helper function that builds the index of all sprites in a given cell """
     area = to_area(s.x, s.y, s.width, s.height)
