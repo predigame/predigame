@@ -14,7 +14,9 @@ import io
 from zipfile import ZipFile
 
 
+levels = []
 current_level = None
+current_level_idx = 0
 globs = None
 show_grid = False
 update_game = True
@@ -216,13 +218,21 @@ def level(_level):
     """ create a game with levels """
     if _level is None:
         return
-    if not isinstance(_level, Level):
-        sys.exit('Levels must be subclases of the Level class --> ' + str(_level))
+    if not isinstance(_level, Level) and not isinstance(_level, list):
+        sys.exit('Levels must be subclases of the Level class or a list of level functions --> ' + str(_level))
     global current_level, globs
-    current_level = _level
+    current_level = _level    
     globs = Globals(WIDTH, HEIGHT, GRID_SIZE, COLLISIONS)
     Globals.instance = globs
-    current_level.setup()
+    if isinstance(current_level, Level):
+        current_level.setup()
+    else:
+        global levels
+        levels = _level
+        current_level = Level()
+        current_level.setup = levels[current_level_idx].setup
+        current_level.completed = levels[current_level_idx].completed
+        current_level.setup()
 
 def image(name = None, pos = None, center = None, size = 1, tag = '', order=FRONT):
     if not name:
@@ -735,7 +745,16 @@ def _update(delta):
 
     if current_level is not None:
         if current_level.completed():
-            next_level = current_level.next()
+            if len(levels) > 0:
+                global current_level_idx
+                current_level_idx = current_level_idx + 1
+                if current_level_idx < len(levels):
+                   next_level = Level()
+                   next_level.setup = levels[current_level_idx].setup
+                   next_level.completed = levels[current_level_idx].completed
+            else:    
+                next_level = current_level.next()
+                
             if next_level is not None:
                 reset(soft=True)
                 level(next_level)

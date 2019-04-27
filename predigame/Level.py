@@ -1,24 +1,21 @@
 # Predigame Levels
-from copy import deepcopy
+from copy import copy
 from .Globals import Globals
 from .utils import import_plugins
 import sys
 
 class Level:
-	def __init__(self):
-		self.globals = None
-
-	def setup(self):
-		""" setup all the sprites needed for this level """
-		raise NotImplementedError('Level.setup() cannot be called directly')
-
-	def completed(self):
-		""" execute an objective function to determine if this level is complete """
-		return False
-
-	def next(self):
-		""" return the next level """
-		return None
+   def __init__(self):
+      self.globals = None
+   def setup(self):
+      """ setup all the sprites needed for this level """
+      raise NotImplementedError('Level.setup() cannot be called directly')
+   def completed(self):
+      """ execute an objective function to determine if this level is complete """
+      return False
+   def next(self):
+      """ return the next level """
+      return None
 
 def load_levels():
     """
@@ -46,22 +43,19 @@ def load_levels():
     print('All levels verified for completeness')
 
     levels.sort(key=lambda x: x.LEVEL, reverse=False)
+    #first_level = None
+    #prev_level = None
+    #for l in levels:
+    #    next_level = Level()
+    #    next_level.setup = l.setup
+    #    next_level.completed = l.completed
 
-    first_level = None
-    prev_level = None
-    for l in levels:
-        next_level = Level()
-        next_level.setup = l.setup
-        next_level.completed = l.completed
+    #    if first_level is None:
+    #        first_level = next_level
 
-        if first_level is None:
-            first_level = next_level
-
-        if prev_level is not None:
-            def def_next():
-                return next_level
-            prev_level.next = def_next
-
-        prev_level = next_level
-    print('Returning {} validated levels.'.format(len(levels)))
-    return first_level
+    #    if prev_level is not None:
+    #        nl = copy(next_level)
+    #        prev_level.next= lambda: nl
+    #    prev_level = next_level
+    print('Returning {} validated levels of type {}.'.format(len(levels), type(levels)))
+    return levels
