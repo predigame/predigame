@@ -1,3 +1,4 @@
+from .Assets import Assets
 class Globals:
     instance = None
     MAX_SIZE=35
@@ -22,3 +23,4 @@ class Globals:
         self.keys_pressed = []
         self.mouse_motion = []
         self.register_collisions = []
+        self.assets = Assets()

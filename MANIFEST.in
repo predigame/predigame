@@ -1,2 +1,3 @@
 include predigame/images/error.png
 include predigame/images/screenshot.png
+include predigame/actors/error.pga

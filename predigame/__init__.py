@@ -1,15 +1,11 @@
 import sys, os, shutil, json
 import urllib.request, traceback
 from io import BytesIO
-from github import Github
 from zipfile import ZipFile
 from types import ModuleType
 from . import predigame
 from .utils import load_module
 from predigame.constants import *
-
-from pkg_resources import get_distribution
-__version__ = get_distribution('predigame').version
 
 def bootstrap():
     if len(sys.argv) == 1:
@@ -18,8 +14,6 @@ def bootstrap():
         print('   pred some_file.py\n')
         print('Create a New Game:')
         print('   pred new some_game\n')
-        print('List Available Game Downloads:')
-        print('   pred list\n')
         print('Download a Game:')
         print('   pred pull some_game')
         print('   pred fetch some_game\n')
@@ -29,9 +23,7 @@ def bootstrap():
         new_game()
     elif sys.argv[1] == 'list':
         get_games()
-    elif sys.argv[1] == 'pull':
-        pull_game()
-    elif sys.argv[1] == 'fetch':
+    elif sys.argv[1] == 'pull' or sys.argv[1] == 'fetch':
         fetch_game()
     else:
         main()
@@ -61,11 +53,10 @@ def main():
         HEIGHT = getattr(dummy_mod, 'HEIGHT', 16)
         TITLE = getattr(dummy_mod, 'TITLE', 'Predigame')
         SIZE = getattr(dummy_mod, 'SIZE', 50)
-        BACKGROUND = getattr(dummy_mod, 'BACKGROUND', (220, 220, 220))
         FULLSCREEN = getattr(dummy_mod, 'FULLSCREEN', False)
         COLLISIONS = getattr(dummy_mod, 'PIXEL_COLLISIONS', True)
 
-    predigame.init(path, WIDTH * SIZE, HEIGHT * SIZE, TITLE, grid = SIZE, bg = BACKGROUND, fullscreen = FULLSCREEN, collisions = COLLISIONS)
+    predigame.init(path, WIDTH * SIZE, HEIGHT * SIZE, TITLE, grid = SIZE, fullscreen = FULLSCREEN, collisions = COLLISIONS)
 
     exec(code, mod.__dict__)
 
@@ -109,11 +100,6 @@ def pull_game():
         traceback.print_exc()
 
 def fetch_game():
-    """
-
-    Similar to pull game but doesn't use the Github API and avoids stumbling into SSL verification issues.
-
-    """
     if len(sys.argv) != 3:
         print('Usage: pred fetch <game>')
         sys.exit()
@@ -136,27 +122,6 @@ def fetch_game():
     except:
         print('Unable to fetch game {} from {}. Does it exist?'.format(game, url))
         traceback.print_exc()
-
-
-def get_games():
-    g = Github()
-    repos = g.get_organization('predigame').get_repos()
-    for repo in repos:
-        name = repo.full_name.replace('predigame/', '')
-        if name == 'predigame':
-            continue
-        desc = repo.description
-        tags = repo.get_tags()
-        version_match = False
-        for tag in tags:
-            tag_name = tag.name
-            tag_url = tag.zipball_url
-            if tag_name == __version__:
-                version_match = True
-            #print('  {} \t {}'.format(tag_name, tag_url))
-        if version_match:
-            print('{0:10} \t {1}'.format(name, desc))
-
 
 def new_game():
     if len(sys.argv) != 3:

@@ -11,7 +11,7 @@ from .Level import Level
 from .constants import *
 import traceback
 import io
-from zipfile import ZipFile
+
 
 
 levels = []
@@ -31,32 +31,15 @@ DISPLAY_MAIN = '__main__'
 displays = {}
 display_active = DISPLAY_MAIN
 
+# TODO refactor screenshot
+# TODO create loading screen
+# TODO fix key/up on movements
+#
 def background(bg = None):
     """ set the background color or image """
     global _background, _background_color
-    if bg is None:
-        from urllib.request import urlopen
-        import io
-        image_str = urlopen('http://picsum.photos/'+str(WIDTH)+'/'+str(HEIGHT)+'/?random').read()
-        image_file = io.BytesIO(image_str)
-        _background = pygame.image.load(image_file).convert()
-        return
-
-    if isinstance(bg, str):
-        if not os.path.isdir('backgrounds'):
-            sys.exit('ERROR: background images need to be stored in the \'backgrounds\' directory')
-            return
-        files = os.listdir('backgrounds')
-        for file in files:
-            nfile = '%s.' % file
-            if nfile.lower().startswith(bg.lower()):
-                _background = pygame.image.load(os.path.join('backgrounds', file)).convert()
-                break
-        else:
-            sys.exit('ERROR: background image doesn\'t exist. File must be saved in \'backgrounds\' directory: ' + bg)
-
-        #size background to fix screen
-        _background = pygame.transform.scale(_background, (WIDTH, HEIGHT))
+    if bg is None or isinstance(bg, str):
+        _background = Globals.instance.assets.background(bg, WIDTH, HEIGHT)
     elif isinstance(bg, Sprite):
         globs.sprites.remove(bg)
         globs.backgrounds.append(bg)
@@ -99,7 +82,7 @@ def _display_swap(name) :
         displays[name][1].setup()
 
 
-def init(path, width = 800, height = 800, title = 'Predigame', bg = (220, 220, 220), fullscreen = False, collisions = True, **kwargs):
+def init(path, width = 800, height = 800, title = 'Predigame', fullscreen = False, collisions = True, **kwargs):
     global globs, RUN_PATH, WIDTH, HEIGHT, FPS, GRID_SIZE, SURF, FULLSCREEN, COLLISIONS, clock, start_time, sounds
 
     RUN_PATH = path
@@ -114,26 +97,26 @@ def init(path, width = 800, height = 800, title = 'Predigame', bg = (220, 220, 2
     SURF = display(None, DISPLAY_MAIN)
     clock = pygame.time.Clock()
 
-    background(bg)
+    background((220, 220, 220))
 
     globs = Globals(WIDTH, HEIGHT, GRID_SIZE, COLLISIONS)
     Globals.instance = globs
 
 
+    #TODO: make this a loading image
+    #all_fonts = pygame.font.get_fonts()
+    #loading_font = pygame.font.SysFont(all_fonts[0], 72)
+    #SURF.blit(loading_font.render('LOADING...', True, (235, 235, 235)), (25, 25))
+    #pygame.display.update()
 
-    loading_font = pygame.font.Font(None, 72)
-    SURF.blit(loading_font.render('LOADING...', True, (235, 235, 235)), (25, 25))
-    pygame.display.update()
-
-    images['__error__'] = pygame.image.load(os.path.join(os.path.dirname(__file__), 'images', 'error.png'))
+    #TODO delete?
     images['__screenshot__'] = pygame.image.load(os.path.join(os.path.dirname(__file__), 'images', 'screenshot.png'))
 
     start_time = get_time()
 
 
 
-def _create_image(name, pos, center, size, tag):
-    img = images[name]
+def _create_image(img, name, pos, center, size, tag):
     rect = img.get_rect()
     new_width = 0
     new_height = 0
@@ -201,18 +184,6 @@ def _create_ellipse(color, pos, size, outline, tag):
 
     return Sprite(surface, rect, tag, name=color)
 
-def _check_image_size(ifile):
-    """ make sure we don't load humongo images """
-    from PIL import Image
-    img = Image.open(ifile)
-    basewidth = 250
-    if img.size[0] > basewidth or img.size[1] > basewidth:
-        print('checking image (' + ifile + ') size --> ' + str(img.size))
-        wpercent = (basewidth/float(img.size[0]))
-        hsize = int((float(img.size[1])*float(wpercent)))
-        img = img.resize((basewidth,hsize), Image.ANTIALIAS)
-        img.save(ifile)
-
 
 def level(_level):
     """ create a game with levels """
@@ -235,96 +206,25 @@ def level(_level):
         current_level.setup()
 
 def image(name = None, pos = None, center = None, size = 1, tag = '', order=FRONT):
-    if not name:
-        if os.path.isdir('images/'):
-            imgs = []
-            mime_types = ('image/png', 'image/jpeg', 'image/gif')
-            for img in os.listdir('images/'):
-                if mimetypes.guess_type(img)[0] in mime_types:
-                    imgs.append(img)
-            if len(imgs):
-                name = os.path.splitext(random.choice(imgs))[0]
-            else:
-                name = '__error__'
-        else:
-            name = '__error__'
-
-    if not name in images:
-        cname = '%s.' % name
-        if os.path.isdir('images/'):
-            for img in os.listdir('images/'):
-                cimg = '%s' % img
-                if cimg.lower().startswith(cname.lower()) :
-                    try:
-                        ifile = os.path.join('images', img)
-                        _check_image_size(ifile)
-                        img = pygame.image.load(ifile)
-                        images[name] = img
-                    except:
-                        traceback.print_exc(file=sys.stdout)
-                        continue
-
-                    break
-            else: # if no image is found and the loop continues ubroken
-                name = '__error__'
-        else:
-            name = '__error__'
+    img = Globals.instance.assets.image(name)
 
     if not center and not pos:
         pos = rand_pos(size - 1, size - 1)
 
-    img = _create_image(name, pos, center, size, tag)
+    sprite = _create_image(img, name, pos, center, size, tag)
     if order == FRONT:
-       globs.sprites.append(img)
+       globs.sprites.append(sprite)
     else:
-       globs.sprites.insert(0, img)
+       globs.sprites.insert(0, sprite)
     if center:
-        register_cell(center, img)
+        register_cell(center, sprite)
     else:
-        register_cell(pos, img)
+        register_cell(pos, sprite)
 
-    return img
+    return sprite
 
 def actor(name = None, pos = None, center = None, size = 1, abortable = False, tag = ''):
-    if not name:
-        sys.exit('ERROR: Actor name is missing!')
-    if not os.path.isdir('actors'):
-        sys.exit('ERROR:  \'actors\' directory is missing')
-
-    loaded = False
-    states = {}
-
-    if name in actors:
-        loaded = True
-        states = actors[name]
-    else:
-        files = os.listdir('actors')
-        cname = '%s.' % name
-        for file in files:
-            cfile = '%s' % file
-            if cfile.lower().startswith(cname.lower()):
-                pga_file = os.path.join('actors', file)
-                try:
-                    with ZipFile(pga_file) as pga:
-                        lst = pga.namelist()
-                        for f in lst:
-                            if f.endswith('.png'):
-                                state = f.split('/')[0]
-                                if not state in states:
-                                    states[state] = []
-                                with pga.open(f) as afile:
-                                    states[state].append(pygame.image.load(io.BytesIO(afile.read())))
-                                    loaded = True
-                    actors[name] = states
-                    break
-                except:
-                    traceback.print_exc(file=sys.stdout)
-                    sys.exit('Unable to find or load actor ' + str(name) + '. actors/' + str(name) + '.pga. may be bad!')
-        else:
-            sys.exit('ERROR: actor {} does not exist.'.format(name))
-
-    if not loaded:
-        sys.exit('Unable to find or load actor ' + str(name) + '. Does actors/' + str(name) + '.pga exist?')
+    states = Globals.instance.assets.actor(name)
 
     if not center and not pos:
         pos = rand_pos(size - 1, size - 1)
