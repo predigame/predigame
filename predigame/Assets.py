@@ -64,13 +64,13 @@ class Assets:
             # check local
             if local_cache.exists() and local_cache.is_dir():
                 for file in local_cache.iterdir():
-                    if re.match(name, file.name, re.I):
+                    if re.match(name + '.', file.name, re.I):
                         return file
 
             # check global
             if global_cache.exists() and global_cache.is_dir():
                 for file in global_cache.iterdir():
-                    if re.match(name, file.name, re.I):
+                    if re.match(name + '.', file.name, re.I):
                         return file
 
             return None
