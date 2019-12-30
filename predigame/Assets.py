@@ -168,6 +168,16 @@ def load(bytes, width=None, height=None):
 def error(type):
     # TODO: find better images for errors
     if type == 'actors':
-        return io.FileIO(PurePath(__file__).parent / 'actors' / 'error.pga')
+        return io.FileIO(resource_path() / 'actors' / 'error.pga')
     else:
-        return io.FileIO(PurePath(__file__).parent / 'images' / 'error.png')
+        return io.FileIO(resource_path() / 'images' / 'error.png')
+
+def resource_path():
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = PurePath(str(sys._MEIPASS))
+    except Exception:
+        base_path = PurePath(__file__).parent
+    print('resource path is %s' % str(base_path))
+    return base_path

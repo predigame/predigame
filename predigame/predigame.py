@@ -32,6 +32,7 @@ displays = {}
 display_active = DISPLAY_MAIN
 
 # TODO refactor screenshot
+# TODO errors and screenshots should be loaded through assets
 # TODO create loading screen
 # TODO fix key/up on movements
 #
@@ -110,7 +111,7 @@ def init(path, width = 800, height = 800, title = 'Predigame', fullscreen = Fals
     #pygame.display.update()
 
     #TODO delete?
-    images['__screenshot__'] = pygame.image.load(os.path.join(os.path.dirname(__file__), 'images', 'screenshot.png'))
+    #images['__screenshot__'] = pygame.image.load(os.path.join(os.path.dirname(__file__), 'images', 'screenshot.png'))
 
     start_time = get_time()
 
@@ -602,10 +603,10 @@ def screenshot(directory = 'screenshots', filename = None):
     size = 100 / globs.GRID_SIZE
     pos = (globs.WIDTH / globs.GRID_SIZE) / 2 - size / 2, (globs.HEIGHT / globs.GRID_SIZE) / 2 - (size / 1.36) / 2
 
-    img = _create_image('__screenshot__', pos, None, size, '')
-    globs.sprites.append(img)
-    camera = globs.sprites[-1]
-    animate(camera, 0.45, camera.destroy, size = size / 1.5)
+    #img = _create_image('__screenshot__', pos, None, size, '')
+    #globs.sprites.append(img)
+    #camera = globs.sprites[-1]
+    #animate(camera, 0.45, camera.destroy, size = size / 1.5)
 
 def _draw_grid():
     for x in range(0, globs.WIDTH, globs.GRID_SIZE):
