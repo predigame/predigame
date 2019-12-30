@@ -9,7 +9,7 @@ import io, pygame, os, random, sys, traceback
 # - 1. check a project's asset directory
 # - 2. check the system cache
 # - 3. check online
-# - 4. return an error asset
+# - 4. error out
 class Assets:
     def __init__(self):
         self.url_prefix = 'http://predigame.io/assets'
@@ -65,7 +65,7 @@ class Assets:
             fetches the index file of available assets for a given type
         """
         try:
-            print('Attempting to fetch index ' + str(self.url_prefix + '/' + type + '/index.txt'))
+            #print('Attempting to fetch index ' + str(self.url_prefix + '/' + type + '/index.txt'))
             index = io.BytesIO(urlopen(self.url_prefix + '/' + type + '/index.txt').read())
             return str(index.getvalue(), 'utf-8').splitlines()
         except:
@@ -97,14 +97,14 @@ class Assets:
             if local_cache.exists() and local_cache.is_dir():
                 for file in local_cache.iterdir():
                     if file.name.lower().startswith(name):
-                        print('found local file ' + str(file))
+                        #print('found local file ' + str(file))
                         return file
 
             # check global
             if global_cache.exists() and global_cache.is_dir():
                 for file in global_cache.iterdir():
                     if file.name.lower().startswith(name):
-                        print('found global file ' + str(file))
+                        #print('found global file ' + str(file))
                         return file
 
             return None
@@ -115,7 +115,7 @@ class Assets:
         else:
             file = self.find('backgrounds', name)
             if file is not None:
-                print('loading file ' + str(file))
+                #print('loading file ' + str(file))
                 return load(io.BytesIO(file.read_bytes()), width, height)
             else:
                 if not has_suffix(name):
@@ -211,12 +211,6 @@ def has_suffix(file):
             return True
     return False
 
-#def error(type):
-#    # TODO: find better images for errors
-#    if type == 'actors':
-#        return io.FileIO(resource_path() / 'actors' / 'error.pga')
-#    else:
-#        return io.FileIO(resource_path() / 'images' / 'error.png')
 
 def resource_path():
     """ Get absolute path to resource, works for dev and for PyInstaller """
@@ -226,5 +220,5 @@ def resource_path():
     except Exception:
         #traceback.print_exc(file=sys.stdout)
         base_path = PurePath(__file__).parent
-    print('resource path is %s' % str(base_path))
+    #print('resource path is %s' % str(base_path))
     return base_path

@@ -32,8 +32,6 @@ displays = {}
 display_active = DISPLAY_MAIN
 
 # TODO refactor screenshot
-# TODO errors and screenshots should be loaded through assets
-# TODO create loading screen
 # TODO fix key/up on movements
 #
 def background(bg = None):
