@@ -19,10 +19,24 @@ class Assets:
         Path(self.global_cache / 'backgrounds').mkdir(parents=True, exist_ok=True)
         Path(self.global_cache / 'images').mkdir(parents=True, exist_ok=True)
         Path(self.global_cache / 'sounds').mkdir(parents=True, exist_ok=True)
+        Path(self.global_cache / 'pyfonts').mkdir(parents=True, exist_ok=True)
 
+        self.fonts_loaded = {}
         self.local_cache = Path.cwd()
         self.images_loaded = {}
         self.actors_loaded = {}
+
+    def font(self, size):
+        if size in self.fonts_loaded:
+            return self.fonts_loaded[size]
+
+        file = self.find('pyfonts', 'freesansbold')
+        if file is not None:
+            self.fonts_loaded[size] = pygame.font.Font(str(file), size)
+            return self.fonts_loaded[size]
+        else:
+            self.fetch('pyfonts', 'freesansbold.ttf')
+            return self.font(size)
 
     def fetch(self, type, item):
         """
@@ -31,10 +45,11 @@ class Assets:
         """
         # download
         try:
+            print('Attempting to fetch ' + str(self.url_prefix + '/' + type + '/' + item))
             item_bytes = io.BytesIO(urlopen(self.url_prefix + '/' + type + '/' + item).read())
         except:
             traceback.print_exc(file=sys.stdout)
-            return error(type)
+            sys.exit('Unable to find %s with the name %s' % (type, item))
         else:
             # save a local copy
             cached_file = io.FileIO(self.global_cache / type  / item, 'w')
@@ -59,18 +74,20 @@ class Assets:
                 return random.choice(list(local_cache.iterdir()))
             if global_cache.exists() and global_cache.is_dir() and len(list(global_cache.iterdir())) > 0:
                 return random.choice(list(global_cache.iterdir()))
-            return error(type)
+            sys.exit('At least one image must be able in the local or global cache. Existing.')
         else:
             # check local
             if local_cache.exists() and local_cache.is_dir():
                 for file in local_cache.iterdir():
-                    if re.match(name + '.', file.name, re.I):
+                    if re.match(name + '\\.', file.name, re.I):
+                        print('found local file ' + str(file))
                         return file
 
             # check global
             if global_cache.exists() and global_cache.is_dir():
                 for file in global_cache.iterdir():
-                    if re.match(name + '.', file.name, re.I):
+                    if re.match(name + '\\.', file.name, re.I):
+                        print('found global file ' + str(file))
                         return file
 
             return None
@@ -81,10 +98,11 @@ class Assets:
                 return load(io.BytesIO(urlopen('http://picsum.photos/800/?random').read()), width, height)
             except:
                 traceback.print_exc(file=sys.stdout)
-                return load(error('backgrounds'), width, height)
+                sys.exit('Unable to fetch background images from the Internet. Check connection and try again. Exiting.')
         else:
             file = self.find('backgrounds', name)
             if file is not None:
+                print('loading file ' + str(file))
                 return load(io.BytesIO(file.read_bytes()), width, height)
             else:
                 return load(self.fetch('backgrounds', name + '.png'), width, height)
@@ -163,14 +181,14 @@ def load(bytes, width=None, height=None):
         return asset
     except:
         traceback.print_exc(file=sys.stdout)
-        return load(error('images'))
+        sys.exit('Error attempting to load image. Exiting.')
 
-def error(type):
-    # TODO: find better images for errors
-    if type == 'actors':
-        return io.FileIO(resource_path() / 'actors' / 'error.pga')
-    else:
-        return io.FileIO(resource_path() / 'images' / 'error.png')
+#def error(type):
+#    # TODO: find better images for errors
+#    if type == 'actors':
+#        return io.FileIO(resource_path() / 'actors' / 'error.pga')
+#    else:
+#        return io.FileIO(resource_path() / 'images' / 'error.png')
 
 def resource_path():
     """ Get absolute path to resource, works for dev and for PyInstaller """
@@ -178,6 +196,7 @@ def resource_path():
         # PyInstaller creates a temp folder and stores path in _MEIPASS
         base_path = PurePath(str(sys._MEIPASS))
     except Exception:
+        #traceback.print_exc(file=sys.stdout)
         base_path = PurePath(__file__).parent
     print('resource path is %s' % str(base_path))
     return base_path

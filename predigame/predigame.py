@@ -102,13 +102,9 @@ def init(path, width = 800, height = 800, title = 'Predigame', fullscreen = Fals
 
     globs = Globals(WIDTH, HEIGHT, GRID_SIZE, COLLISIONS)
     Globals.instance = globs
-
-
-    #TODO: make this a loading image
-    #all_fonts = pygame.font.get_fonts()
-    #loading_font = pygame.font.SysFont(all_fonts[0], 72)
-    #SURF.blit(loading_font.render('LOADING...', True, (235, 235, 235)), (25, 25))
-    #pygame.display.update()
+    loading_font = Globals.instance.assets.font(72)
+    SURF.blit(loading_font.render('LOADING...', True, (235, 235, 235)), (25, 25))
+    pygame.display.update()
 
     #TODO delete?
     #images['__screenshot__'] = pygame.image.load(os.path.join(os.path.dirname(__file__), 'images', 'screenshot.png'))
@@ -298,7 +294,7 @@ def text(string, color = None, pos = None, size = 1, tag = ''):
     """
     string = str(string)
     size = int(size * globs.GRID_SIZE)
-    font = pygame.font.Font(None, size)
+    font = Globals.instance.assets.font(size)
     font_width, font_height = font.size(string)
 
     if not color:
@@ -502,7 +498,7 @@ def score(value = 0, **kwargs):
 
     if scoreboard['prefix']:
         string = scoreboard['prefix'] + ' ' + string
-    font = pygame.font.Font(None, scoreboard['size'])
+    font = Globals.instance.assets.font(scoreboard['size'])
     font_width, font_height = font.size(string)
     if color:
         scoreboard['color'] = color
