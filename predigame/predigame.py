@@ -51,10 +51,7 @@ def display(eventkey, name, wrapper=None):
     """ create a new pygame drawing surface that is triggered when eventkey is pressed.
         any active game is paused when the display is swapped """
 
-    if FULLSCREEN:
-        surface = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN | pygame.DOUBLEBUF | pygame.HWSURFACE)
-    else:
-        surface = pygame.display.set_mode((WIDTH, HEIGHT), pygame.DOUBLEBUF | pygame.HWSURFACE)
+    surface = pygame.display.set_mode((WIDTH, HEIGHT), pygame.DOUBLEBUF | pygame.HWSURFACE)
     surface.fill((0, 0, 0))
 
     displays[name] = (surface, wrapper)
@@ -83,14 +80,13 @@ def _display_swap(name) :
         displays[name][1].setup()
 
 
-def init(path, width = 800, height = 800, title = 'Predigame', fullscreen = False, collisions = True, **kwargs):
-    global globs, RUN_PATH, WIDTH, HEIGHT, FPS, GRID_SIZE, SURF, FULLSCREEN, COLLISIONS, clock, start_time, sounds
+def init(path, width = 800, height = 800, title = 'Predigame', collisions = True, **kwargs):
+    global globs, RUN_PATH, WIDTH, HEIGHT, FPS, GRID_SIZE, SURF, COLLISIONS, clock, start_time, sounds
 
     RUN_PATH = path
     WIDTH, HEIGHT = width, height
     FPS = kwargs.get('fps', 45)
     GRID_SIZE = kwargs.get('grid', 50)
-    FULLSCREEN = fullscreen
     COLLISIONS = collisions
     pygame.mixer.pre_init(22050, -16, 2, 1024) # sound delay fix
     pygame.init()

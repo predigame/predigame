@@ -53,10 +53,9 @@ def main():
         HEIGHT = getattr(dummy_mod, 'HEIGHT', 16)
         TITLE = getattr(dummy_mod, 'TITLE', 'Predigame')
         SIZE = getattr(dummy_mod, 'SIZE', 50)
-        FULLSCREEN = getattr(dummy_mod, 'FULLSCREEN', False)
         COLLISIONS = getattr(dummy_mod, 'PIXEL_COLLISIONS', True)
 
-    predigame.init(path, WIDTH * SIZE, HEIGHT * SIZE, TITLE, grid = SIZE, fullscreen = FULLSCREEN, collisions = COLLISIONS)
+    predigame.init(path, WIDTH * SIZE, HEIGHT * SIZE, TITLE, grid = SIZE, collisions = COLLISIONS)
 
     exec(code, mod.__dict__)
 
