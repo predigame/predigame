@@ -2,7 +2,7 @@ from pathlib import Path, PurePath
 from urllib.request import urlopen
 from PIL import Image
 from zipfile import ZipFile
-import io, pygame, os, random, re, sys, traceback
+import io, pygame, os, random, sys, traceback
 
 # globally manages assets across the platform, fetching from the internet as needed
 # business rules for retrieving assets
@@ -25,6 +25,7 @@ class Assets:
         self.local_cache = Path.cwd()
         self.images_loaded = {}
         self.actors_loaded = {}
+        self.background_index = self.fetch_index('backgrounds')
 
     def font(self, size):
         if size in self.fonts_loaded:
@@ -59,6 +60,18 @@ class Assets:
             writer.close()
             return item_bytes
 
+    def fetch_index(self, type):
+        """
+            fetches the index file of available assets for a given type
+        """
+        try:
+            print('Attempting to fetch index ' + str(self.url_prefix + '/' + type + '/index.txt'))
+            index = io.BytesIO(urlopen(self.url_prefix + '/' + type + '/index.txt').read())
+            return str(index.getvalue(), 'utf-8').splitlines()
+        except:
+            traceback.print_exc(file=sys.stdout)
+            sys.exit('Unable to find %s directory index. Check Internet connection and try again. Exiting.' % type)
+
     def find(self, type, name):
         """
             fetches files that are in the local (per game) or global (per system) cache
@@ -76,17 +89,21 @@ class Assets:
                 return random.choice(list(global_cache.iterdir()))
             sys.exit('At least one image must be able in the local or global cache. Existing.')
         else:
+
+            if not has_suffix(name):
+                name = name + '.'
+
             # check local
             if local_cache.exists() and local_cache.is_dir():
                 for file in local_cache.iterdir():
-                    if re.match(name + '\\.', file.name, re.I):
+                    if file.name.lower().startswith(name):
                         print('found local file ' + str(file))
                         return file
 
             # check global
             if global_cache.exists() and global_cache.is_dir():
                 for file in global_cache.iterdir():
-                    if re.match(name + '\\.', file.name, re.I):
+                    if file.name.lower().startswith(name):
                         print('found global file ' + str(file))
                         return file
 
@@ -94,18 +111,16 @@ class Assets:
 
     def background(self, name, width=800, height=600):
         if name is "" or name is None:
-            try:
-                return load(io.BytesIO(urlopen('http://picsum.photos/800/?random').read()), width, height)
-            except:
-                traceback.print_exc(file=sys.stdout)
-                sys.exit('Unable to fetch background images from the Internet. Check connection and try again. Exiting.')
+            return self.background(random.choice(self.background_index), width, height)
         else:
             file = self.find('backgrounds', name)
             if file is not None:
                 print('loading file ' + str(file))
                 return load(io.BytesIO(file.read_bytes()), width, height)
             else:
-                return load(self.fetch('backgrounds', name + '.png'), width, height)
+                if not has_suffix(name):
+                    name = name + '.png'
+                return load(self.fetch('backgrounds', name), width, height)
 
     def image(self, name):
         local_images = Path(self.local_cache / 'images')
@@ -123,13 +138,18 @@ class Assets:
                 reduce_size(file)
                 self.images_loaded[name] = load(io.BytesIO(file.read_bytes()))
             else:
-                self.images_loaded[name] = load(self.fetch('images', name + '.png'))
+                if not has_suffix(name):
+                    name = name + '.png'
+                self.images_loaded[name] = load(self.fetch('images', name))
 
             return self.images_loaded[name]
 
     def actor(self, name):
         local_actors = Path(self.local_cache / 'actors')
         global_actors = Path(self.global_cache / 'actors')
+
+        if not has_suffix(name):
+            name = name + '.pga'
 
         if name is "" or name is None:
             return load(io.BytesIO(self.find('actors', None).read_bytes()))
@@ -140,7 +160,7 @@ class Assets:
 
             file = self.find('actors', name)
             if file is None:
-                file = self.fetch('actors', name + '.pga')
+                file = self.fetch('actors', name)
 
             # extract states from actor file
             try:
@@ -182,6 +202,14 @@ def load(bytes, width=None, height=None):
     except:
         traceback.print_exc(file=sys.stdout)
         sys.exit('Error attempting to load image. Exiting.')
+
+def has_suffix(file):
+    extensions = ['.jpg', '.jpeg', '.png', '.pga', '.bmp']
+    file = file.lower()
+    for x in extensions:
+        if file.endswith(x):
+            return True
+    return False
 
 #def error(type):
 #    # TODO: find better images for errors
