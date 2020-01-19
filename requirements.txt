@@ -1,4 +1,4 @@
-pygame==1.9.6
+pygame==2.0.0.dev6
 pillow
 astar==0.9
 bresenham==0.2
